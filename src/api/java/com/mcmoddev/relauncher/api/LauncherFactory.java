@@ -45,6 +45,16 @@ public interface LauncherFactory<T extends LauncherConfig> {
     T getConfig(Path path);
 
     /**
+     * Gets the path of the config file, relative to the launcher's directory.
+     *
+     * @param launcherDirectory the directory of the launcher
+     * @return the config path
+     */
+    default Path getConfigPath(Path launcherDirectory) {
+        return launcherDirectory.resolve("config.conf");
+    }
+
+    /**
      * Creates a {@link JarUpdater updater}.
      *
      * @param config the launcher config

@@ -43,10 +43,13 @@ import java.util.concurrent.TimeUnit;
 public final class Main {
     public static final ThreadGroup THREAD_GROUP = new ThreadGroup("ReLauncher");
 
+    public static final WrappingFactory FACTORY = new WrappingFactory<>(ServiceLoader.load(LauncherFactory.class)
+        .findFirst()
+        .orElse(new DefaultLauncherFactory()));
     public static final String RMI_NAME = ProcessConnector.BASE_NAME + "#" + (int) ProcessHandle.current().pid();
     public static final Logger LOG = LoggerFactory.getLogger("ReLauncher");
     public static final Path RELAUNCHER_DIR = Path.of(".relauncher");
-    public static final Path CONFIG_PATH = RELAUNCHER_DIR.resolve("config.conf");
+    public static final Path CONFIG_PATH = FACTORY.getConfigPath(RELAUNCHER_DIR);
     public static final Path AGENT_PATH = RELAUNCHER_DIR.resolve("agent.jar");
     public static final ScheduledThreadPoolExecutor SERVICE;
 
@@ -70,15 +73,13 @@ public final class Main {
             Files.createDirectories(RELAUNCHER_DIR);
         }
 
-        final var factory = resolveFactory();
-
         final var cfgExists = Files.exists(CONFIG_PATH);
-        final var config = factory.getConfig(CONFIG_PATH);
+        final var config = FACTORY.getConfig(CONFIG_PATH);
         if (!cfgExists && config.throwIfNew()) {
             throw new RuntimeException("A new configuration file was created! Please configure it.");
         }
 
-        final var updater = factory.createUpdater(config);
+        final var updater = FACTORY.createUpdater(config);
 
         try {
             copyAgent(updater);
@@ -88,7 +89,7 @@ public final class Main {
         }
 
         if (config.isDiscordIntegrationEnabled()) {
-            discordIntegration = factory.createDiscordIntegration(config, updater);
+            discordIntegration = FACTORY.createDiscordIntegration(config, updater);
             if (discordIntegration != null) {
                 LOG.warn("Discord integration is active!");
                 SERVICE.setMaximumPoolSize(2);
@@ -113,10 +114,5 @@ public final class Main {
 
     public static void copyAgent(JarUpdater updater) throws IOException {
         Files.copy(updater.getAgentResource(), updater.getAgentPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    @NotNull
-    static WrappingFactory resolveFactory() {
-        return new WrappingFactory<>(ServiceLoader.load(LauncherFactory.class).findFirst().orElse(new DefaultLauncherFactory()));
     }
 }
