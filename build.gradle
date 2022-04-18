@@ -35,6 +35,9 @@ configurations {
     agentCompileOnly.extendsFrom(globalCompileOnly)
     launcherCompileOnly.extendsFrom(globalCompileOnly)
     compileOnly.extendsFrom(globalCompileOnly)
+
+    logback
+    launcherRuntimeOnly.extendsFrom(logback)
 }
 
 def agentClass = "com.mcmoddev.relauncher.agent.Agent"
@@ -72,16 +75,24 @@ dependencies {
     implementation sourceSets.api.output
     api sourceSets.api.output
 
-    agentImplementation libs.jda // This is just a compat layer for jda mentionables. DO NOT USE FOR ANYTHING ELSE as the agent will not have it shaded
-    agentImplementation libs.logback
+    agentCompileOnly libs.jda // This is just a compat layer for jda mentionables. DO NOT USE FOR ANYTHING ELSE as the agent will not have it shaded
+    agentCompileOnly libs.logback
     agentImplementation sourceSets.api.output
 
     launcherImplementation sourceSets.main.output
 
     shade sourceSets.api.output
     shade libs.gson
-    shade libs.logback
     shade libs.configurate.hocon
+
+    def slf4j = "org.slf4j:slf4j-api:1.7.36"
+
+    launcherCompileOnly slf4j
+    runtimeElements slf4j
+    logback(libs.logback) {
+        exclude module: 'logback-classic'
+    }
+    logback slf4j
 
     // Discord stuff
     shade libs.jda
@@ -138,12 +149,34 @@ tasks.create("copyAgentJar", Copy) {
     mustRunAfter(tasks.getByName("processLauncherResources"))
     from "$buildDir/libs/$archivesBaseName-$version-agent.jar"
     into "$buildDir/resources/launcher/"
-    rename "$archivesBaseName-$version-agent.jar", "agent.zip"
+    rename "$archivesBaseName-$version-agent.jar", "relauncher-agent.zip"
+}
+
+tasks.create("selfUpdateJar", Jar).configure {
+    from(sourceSets.launcher.output) {
+        include "com/mcmoddev/relauncher/selfupdate/**/*.class"
+    }
+    classifier("selfupdate")
+    group("build")
+    description("Builds the selfupdate JAR")
+    manifest.attributes(makeManifestAttributes('Main-Class', 'com.mcmoddev.relauncher.selfupdate.SelfUpdate'))
+}
+
+tasks.create("copySelfUpdateJar", Copy) {
+    dependsOn("selfUpdateJar")
+    mustRunAfter(tasks.getByName("processLauncherResources"))
+    from "$buildDir/libs/$archivesBaseName-$version-selfupdate.jar"
+    into "$buildDir/resources/launcher/"
+    rename "$archivesBaseName-$version-selfupdate.jar", "relauncher-selfupdate.zip"
 }
 
 tasks.getByName('launcherClasses').configure {
     dependsOn("copyAgentJar")
     mustRunAfter(tasks.getByName("copyAgentJar"))
+    doLast {
+        tasks.getByName('selfUpdateJar').copy()
+        tasks.getByName('copySelfUpdateJar').copy()
+    }
 }
 
 tasks.named('build').configure {
@@ -153,8 +186,13 @@ tasks.named('build').configure {
 tasks.named('shadowJar', ShadowJar).configure {
     dependsOn("copyAgentJar")
     from sourceSets.main.output // The logback file
-    from sourceSets.launcher.output
-    configurations = [project.configurations.shade]
+    from(sourceSets.launcher.output) {
+        exclude "com/mcmoddev/relauncher/selfupdate/**/*.class"
+    }
+    configurations = [
+            project.configurations.shade,
+            project.configurations.logback
+    ]
     classifier("all")
     group("build")
     description("Builds the whole project with its dependencies.")
@@ -163,7 +201,9 @@ tasks.named('shadowJar', ShadowJar).configure {
 tasks.named(JavaPlugin.JAR_TASK_NAME, Jar).configure {
     dependsOn("generatePomFileForMavenPublication")
     from sourceSets.api.output
-    from sourceSets.launcher.output
+    from(sourceSets.launcher.output) {
+        exclude "com/mcmoddev/relauncher/selfupdate/**.class"
+    }
 
     exclude "logback.xml"
     into("META-INF/maven/${project.group}/${project.name}") {
@@ -188,7 +228,9 @@ tasks.create("apiJar", Jar).configure {
 tasks.create("sourcesJar", Jar) {
     dependsOn("launcherClasses")
     from sourceSets.api.allSource
-    from sourceSets.launcher.allSource
+    from(sourceSets.launcher.allSource) {
+        exclude "com/mcmoddev/relauncher/selfupdate/**.java"
+    }
     classifier("sources")
     group("build")
     description("Builds the sources jar")

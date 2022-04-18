@@ -20,6 +20,7 @@
  */
 package com.mcmoddev.relauncher;
 
+import static com.mcmoddev.relauncher.Main.findJavaBinary;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.ProcessInfo;
@@ -187,10 +188,6 @@ public class DefaultJarUpdater implements JarUpdater {
         command.add("-jar");
         command.add(jarPath.toString());
         return command;
-    }
-
-    private static String findJavaBinary() {
-        return ProcessHandle.current().info().command().orElse("java");
     }
 
     @Override

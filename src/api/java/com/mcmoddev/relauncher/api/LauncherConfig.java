@@ -51,5 +51,12 @@ public interface LauncherConfig {
         return true;
     }
 
+    /**
+     * @return if the launcher should be able to update itself
+     */
+    default boolean allowSelfUpdate() {
+        return true;
+    }
+
     record CheckingRate(long amount, TimeUnit unit) {}
 }

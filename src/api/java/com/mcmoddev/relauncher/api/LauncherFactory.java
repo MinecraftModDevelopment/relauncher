@@ -23,7 +23,13 @@ package com.mcmoddev.relauncher.api;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Path;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * A factory for ReLauncher. <br>
@@ -74,4 +80,22 @@ public interface LauncherFactory<T extends LauncherConfig> {
     @Nullable
     DiscordIntegration createDiscordIntegration(T config, JarUpdater updater);
 
+    /**
+     * @return the GitHub repository of the launcher
+     */
+    @Nullable
+    default RepoInfo getLauncherRepo() {
+        return new RepoInfo("MinecraftModDevelopment", "ReLauncher");
+    }
+
+    /**
+     * Gets the self update url for a tag name.
+     *
+     * @param tagName the tag to update to
+     * @return the download url, or {@code null}
+     */
+    @Nullable
+    String getSelfUpdateUrl(String tagName) throws IOException, InterruptedException;
+
+    record RepoInfo(String owner, String repo) {}
 }

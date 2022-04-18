@@ -92,10 +92,10 @@ public interface JarUpdater extends Runnable {
      */
     @NotNull
     default InputStream getAgentResource() {
-        var agent = getClass().getResourceAsStream("/agent.jar");
+        var agent = getClass().getResourceAsStream("/relauncher-agent.jar");
         if (agent == null) {
             // If we can't find it as a .jar, try a .zip
-            agent = getClass().getResourceAsStream("/agent.zip");
+            agent = getClass().getResourceAsStream("/relauncher-agent.zip");
         }
         return Objects.requireNonNull(agent);
     }

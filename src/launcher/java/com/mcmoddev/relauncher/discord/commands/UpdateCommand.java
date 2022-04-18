@@ -22,8 +22,10 @@ package com.mcmoddev.relauncher.discord.commands;
 
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
+import com.mcmoddev.relauncher.Main;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.Release;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -39,14 +41,24 @@ public class UpdateCommand extends RLCommand {
         name = "update";
         help = "Updates the process' jar.";
         options = List.of(
-            new OptionData(OptionType.STRING, "tag", "The tag to which to update. Don't provide to update to latest.")
+            new OptionData(OptionType.STRING, "tag", "The tag to which to update. Don't provide to update to latest."),
+            new OptionData(OptionType.BOOLEAN, "self-update", "If the launcher should self-update to the specified tag.")
         );
     }
 
     @Override
     protected void execute(final SlashCommandEvent event) {
         final var jarUpdater = this.jarUpdater.get();
+        final var selfUpdate = event.getOption("self-update", false, OptionMapping::getAsBoolean);
         final var tagOption = event.getOption("tag");
+        if (selfUpdate && tagOption == null) {
+            event.reply("Please specify a tag to self update to!").queue();
+            return;
+        }
+        if (selfUpdate) {
+            selfUpdate(tagOption.getAsString(), event);
+            return;
+        }
         if (tagOption == null) {
             event.reply("Trying to update to latest...")
                 .map(hook -> {
@@ -91,6 +103,20 @@ public class UpdateCommand extends RLCommand {
                 })
                 .queue(RestAction::queue);
         }
+    }
+
+    private void selfUpdate(String tagName, SlashCommandEvent event) {
+        event.deferReply()
+            .setContent("Updating...")
+            .queue(hook -> {
+                try {
+                    Main.LOG.error("Self-updating to tag '{}' at the request of {}({}) via Discord.", tagName, event.getUser().getAsTag(), event.getUser().getId());
+                    Main.selfUpdate(tagName);
+                } catch (Exception e) {
+                    Main.LOG.error("Exception trying to self-update to tag '{}': {}", tagName, e);
+                    hook.editOriginal("Exception trying to self-update to tag '%s': %s".formatted(tagName, e)).queue();
+                }
+            });
     }
 
 }

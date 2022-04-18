@@ -65,6 +65,7 @@ public class StatusCommand extends RLCommand implements EventListener {
                     .setColor(Color.RED)
                     .setTitle("Process is not running")
                     .addField("Jar Version", version.orElse("Unknown"), true)
+                    .addField("Launcher Version", Main.VERSION, true)
                     .setTimestamp(Instant.now())
                     .build()
             ).queue();
@@ -73,6 +74,7 @@ public class StatusCommand extends RLCommand implements EventListener {
                 .setColor(Color.GREEN)
                 .setTitle("Process is running.")
                 .addField("Jar Version", version.orElse("Unknown"), true)
+                .addField("Launcher Version", Main.VERSION, true)
                 .addField("Running Since", process.process().info().startInstant().map(TimeFormat.RELATIVE::format).orElse("Unknown startup time"), true)
                 .setTimestamp(Instant.now());
 

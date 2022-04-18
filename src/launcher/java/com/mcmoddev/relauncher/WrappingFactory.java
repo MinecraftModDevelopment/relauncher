@@ -27,6 +27,7 @@ import com.mcmoddev.relauncher.api.LauncherFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
 
@@ -53,5 +54,15 @@ record WrappingFactory<T extends LauncherConfig>(LauncherFactory<T> delegate) im
 
     public @Nullable DiscordIntegration createDiscordIntegration(final Object config, final JarUpdater updater) {
         return delegate.createDiscordIntegration((T) config, updater);
+    }
+
+    @Override
+    public @Nullable RepoInfo getLauncherRepo() {
+        return delegate.getLauncherRepo();
+    }
+
+    @Override
+    public @Nullable String getSelfUpdateUrl(final String tagName) throws IOException, InterruptedException {
+        return delegate.getSelfUpdateUrl(tagName);
     }
 }
