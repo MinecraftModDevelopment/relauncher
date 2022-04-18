@@ -20,27 +20,26 @@
  */
 package com.mcmoddev.relauncher;
 
+import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
+import com.mcmoddev.relauncher.api.LauncherFactory;
 import com.mcmoddev.relauncher.api.connector.ProcessConnector;
-import com.mcmoddev.relauncher.discord.DiscordIntegration;
-import com.mcmoddev.relauncher.github.GithubUpdateChecker;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongepowered.configurate.ConfigurateException;
 
 import java.io.IOException;
-import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public final class Main {
     public static final ThreadGroup THREAD_GROUP = new ThreadGroup("ReLauncher");
 
@@ -64,7 +63,6 @@ public final class Main {
     });
 
     private static DiscordIntegration discordIntegration;
-    private static JarUpdater updater;
 
     public static void main(String[] args) throws IOException {
         System.setProperty("java.rmi.server.hostname", "127.0.0.1");
@@ -72,28 +70,15 @@ public final class Main {
             Files.createDirectories(RELAUNCHER_DIR);
         }
 
+        final var factory = resolveFactory();
+
         final var cfgExists = Files.exists(CONFIG_PATH);
-        Config config;
-        try {
-            config = Config.load(CONFIG_PATH);
-        } catch (ConfigurateException e) {
-            throw new RuntimeException(e);
-        }
-        if (!cfgExists) {
+        final var config = factory.getConfig(CONFIG_PATH);
+        if (!cfgExists && config.throwIfNew()) {
             throw new RuntimeException("A new configuration file was created! Please configure it.");
         }
 
-        final var updateChecker = new GithubUpdateChecker(config.gitHub.owner, config.gitHub.repo, HttpClient.newBuilder()
-            .executor(HTTP_CLIENT_EXECUTOR)
-            .build(), Pattern.compile(config.checkingInfo.filePattern));
-
-        if (config.discord.enabled) {
-            discordIntegration = new DiscordIntegration(Paths.get(""), config.discord, () -> Main.updater);
-            LOG.warn("Discord integration is active!");
-            SERVICE.setMaximumPoolSize(2);
-        }
-
-        updater = new DefaultJarUpdater(Paths.get(config.jarPath), updateChecker, config.jvmArgs, config.discord.loggingWebhook, discordIntegration);
+        final var updater = factory.createUpdater(config);
 
         try {
             copyAgent(updater);
@@ -102,16 +87,36 @@ public final class Main {
             throw new RuntimeException(e);
         }
 
-        if (config.checkingInfo.rate > -1) {
-            SERVICE.scheduleAtFixedRate(updater, 0, config.checkingInfo.rate, TimeUnit.MINUTES);
-            LOG.warn("Scheduled updater. Will run every {} minutes.", config.checkingInfo.rate);
+        if (config.isDiscordIntegrationEnabled()) {
+            discordIntegration = factory.createDiscordIntegration(config, updater);
+            if (discordIntegration != null) {
+                LOG.warn("Discord integration is active!");
+                SERVICE.setMaximumPoolSize(2);
+            }
+        }
+
+        final var checkingRate = config.getCheckingRate();
+
+        if (checkingRate.amount() > -1) {
+            SERVICE.scheduleAtFixedRate(updater, 0, checkingRate.amount(), checkingRate.unit());
+            LOG.warn("Scheduled updater. Will run every {} minutes.", checkingRate);
         } else {
             updater.tryFirstStart();
             SERVICE.allowCoreThreadTimeOut(true);
         }
     }
 
+    @Nullable
+    public static DiscordIntegration getDiscordIntegration() {
+        return discordIntegration;
+    }
+
     public static void copyAgent(JarUpdater updater) throws IOException {
         Files.copy(updater.getAgentResource(), updater.getAgentPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    @NotNull
+    static WrappingFactory resolveFactory() {
+        return new WrappingFactory<>(ServiceLoader.load(LauncherFactory.class).findFirst().orElse(new DefaultLauncherFactory()));
     }
 }

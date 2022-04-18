@@ -20,13 +20,12 @@
  */
 package com.mcmoddev.relauncher;
 
+import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.ProcessInfo;
 import com.mcmoddev.relauncher.api.Release;
 import com.mcmoddev.relauncher.api.UpdateChecker;
 import com.mcmoddev.relauncher.api.connector.ProcessConnector;
-import com.mcmoddev.relauncher.discord.DiscordIntegration;
-import net.dv8tion.jda.api.entities.Activity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -35,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,16 +55,14 @@ public class DefaultJarUpdater implements JarUpdater {
     private final List<String> javaArgs;
     private final Map<String, String> properties;
     private final LoggingWebhook loggingWebhook;
-    private final DiscordIntegration integration;
 
     @Nullable
     private ProcessInfo process;
 
-    public DefaultJarUpdater(@NonNull final Path jarPath, @NonNull final UpdateChecker updateChecker, @NonNull final List<String> javaArgs, String webhookUrl, final DiscordIntegration integration) {
+    public DefaultJarUpdater(@NonNull final Path jarPath, @NonNull final UpdateChecker updateChecker, @NonNull final List<String> javaArgs, String webhookUrl) {
         this.jarPath = jarPath.toAbsolutePath();
         this.updateChecker = updateChecker;
         this.javaArgs = javaArgs;
-        this.integration = integration;
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             if (process != null) {
@@ -127,9 +123,17 @@ public class DefaultJarUpdater implements JarUpdater {
         }
     }
 
+    private void setDiscordActivity(boolean processRunning) {
+        final var integ = Main.getDiscordIntegration();
+        if (integ != null) {
+            integ.setActivity(DiscordIntegration.ActivityType.WATCHING, processRunning ? "a process \uD83D\uDC40" : "nothing \uD83D\uDE22");
+        }
+    }
+
     public void update(final Release release) throws Exception {
-        if (integration != null) {
-            integration.getJda().getPresence().setActivity(Activity.of(Activity.ActivityType.CUSTOM_STATUS, "Updating a process \uD83D\uDD04"));
+        final var discordIntegration = Main.getDiscordIntegration();
+        if (discordIntegration != null) {
+            discordIntegration.setActivity(DiscordIntegration.ActivityType.CUSTOM_STATUS, "Updating a process \uD83D\uDD04");
         }
 
         final var parent = jarPath.getParent();
@@ -154,18 +158,14 @@ public class DefaultJarUpdater implements JarUpdater {
             }
 
             LOGGER.info("Starting process...");
-            if (integration != null) {
-                integration.setActivity(true);
-            }
+            setDiscordActivity(true);
             return new ProcessBuilder(getStartCommand())
                 .inheritIO()
                 .start();
         } catch (IOException e) {
             LOGGER.error("Starting process failed, used start command {}", getStartCommand(), e);
         }
-        if (integration != null) {
-            integration.setActivity(false); // exception in this case
-        }
+        setDiscordActivity(false); // exception in this case
         return null;
     }
 
@@ -251,9 +251,7 @@ public class DefaultJarUpdater implements JarUpdater {
             this.process = new DelegatedProcess(process) {
                 @Override
                 public void destroy() {
-                    if (integration != null) {
-                        integration.setActivity(false);
-                    }
+                    setDiscordActivity(false);
                     if (connector != null) {
                         try {
                             connector.onShutdown();
@@ -266,9 +264,7 @@ public class DefaultJarUpdater implements JarUpdater {
 
                 @Override
                 public Process destroyForcibly() {
-                    if (integration != null) {
-                        integration.setActivity(false);
-                    }
+                    setDiscordActivity(false);
                     return super.destroyForcibly();
                 }
             };

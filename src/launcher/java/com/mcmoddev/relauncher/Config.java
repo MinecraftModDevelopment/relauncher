@@ -20,6 +20,7 @@
  */
 package com.mcmoddev.relauncher;
 
+import com.mcmoddev.relauncher.api.LauncherConfig;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
@@ -33,9 +34,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @ConfigSerializable
-public class Config {
+public class Config implements LauncherConfig {
     public static final Config DEFAULT = new Config();
 
     @Required
@@ -134,14 +136,24 @@ public class Config {
         public String loggingWebhook = "";
     }
 
-    public static Config load(final Path path) throws ConfigurateException {
+    @Override
+    public CheckingRate getCheckingRate() {
+        return new CheckingRate(checkingInfo.rate, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public boolean isDiscordIntegrationEnabled() {
+        return discord.enabled;
+    }
+
+    public static <T> T load(final Path path, final Class<T> cfgType, final T defaultValue) throws ConfigurateException {
         final HoconConfigurationLoader loader = HoconConfigurationLoader.builder()
             .emitComments(true)
             .prettyPrinting(true)
             .path(path)
             .build();
-        final var configSerializer = Objects.requireNonNull(loader.defaultOptions().serializers().get(Config.class));
-        final var type = io.leangen.geantyref.TypeToken.get(Config.class).getType();
+        final var configSerializer = Objects.requireNonNull(loader.defaultOptions().serializers().get(cfgType));
+        final var type = io.leangen.geantyref.TypeToken.get(cfgType).getType();
 
         if (!Files.exists(path)) {
             try {
@@ -150,7 +162,7 @@ public class Config {
                     Files.createDirectories(path.getParent());
                 }
                 Files.createFile(path);
-                configSerializer.serialize(type, DEFAULT, node.node());
+                configSerializer.serialize(type, defaultValue, node.node());
                 node.save();
             } catch (Exception e) {
                 throw new ConfigurateException(e);
@@ -161,11 +173,11 @@ public class Config {
 
         { // Add new values to the config
             final var inMemoryNode = CommentedConfigurationNode.factory().createNode();
-            configSerializer.serialize(type, DEFAULT, inMemoryNode);
+            configSerializer.serialize(type, defaultValue, inMemoryNode);
             configRef.node().mergeFrom(inMemoryNode);
             configRef.save();
         }
 
-        return configRef.referenceTo(Config.class).get();
+        return configRef.referenceTo(cfgType).get();
     }
 }

@@ -23,6 +23,7 @@ package com.mcmoddev.relauncher.discord;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.Main;
+import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.discord.commands.ProfilingCommand;
 import com.mcmoddev.relauncher.discord.commands.file.FileCommand;
@@ -34,22 +35,16 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
-public final class DiscordIntegration {
-    private final Logger logger = LoggerFactory.getLogger("RLDiscordIntegration");
-    private final Config.Discord config;
+public final class DefaultDiscordIntegration implements DiscordIntegration {
     private final JDA jda;
 
-    public DiscordIntegration(final Path basePath, final Config.Discord config, final Supplier<JarUpdater> updater) {
-        this.config = config;
-
+    public DefaultDiscordIntegration(final Path basePath, final Config.Discord config, final Supplier<JarUpdater> updater) {
         final var statusCmd = new StatusCommand(updater, config);
         final var commandClient = new CommandClientBuilder()
             .setOwnerId("0000000000")
@@ -86,20 +81,8 @@ public final class DiscordIntegration {
 
     }
 
-    public Logger getLogger() {
-        return logger;
-    }
-
-    public Config.Discord getConfig() {
-        return config;
-    }
-
-    public JDA getJda() {
-        return jda;
-    }
-
-    public void setActivity(boolean processRunning) {
-        getJda().getPresence()
-            .setActivity(Activity.of(Activity.ActivityType.WATCHING, processRunning ? "a process \uD83D\uDC40" : "nothing \uD83D\uDE22"));
+    @Override
+    public void setActivity(final ActivityType type, final String name) {
+        jda.getPresence().setActivity(Activity.of(Activity.ActivityType.valueOf(type.name()), name));
     }
 }
