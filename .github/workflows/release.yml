@@ -27,7 +27,7 @@ jobs:
         run: chmod +x gradlew
       - name: Build Jar with Gradle
         id: publish_release_assets
-        run: ./gradlew build -Pversion=${{ env.TAG }}
+        run: ./gradlew buildAll -Pversion=${{ env.TAG }}
         env:
           BUILD_NUMBER: ${{ github.run_number }}
       - name: Create release
