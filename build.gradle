@@ -79,7 +79,6 @@ dependencies {
     shade libs.gson
     shade libs.logback
     shade libs.configurate.hocon
-    shade libs.commons.io
 
     // Discord stuff
     shade libs.jda
@@ -87,6 +86,9 @@ dependencies {
 
     globalCompileOnly libs.annotations
 }
+
+// Relocates all of the tasks from build
+tasks.stream().filter({it.group == "build" && it.name.toLowerCase(Locale.ROOT).endsWith("classes")}).forEach({it.group = "other"})
 
 tasks.create("agentJar", Jar).configure {
     from sourceSets.api.output
@@ -156,11 +158,14 @@ tasks.create("apiJar", Jar).configure {
     classifier("api")
     description("Builds the api jar.")
     dependsOn(tasks.getByName("updateLicenses"))
+    group("build")
 }
 
 
 tasks.create('buildAll') {
     dependsOn("build", "agentJar", "apiJar", "jar")
+    group("build")
+    description("Runs all the build tasks")
 }
 
 def makeManifestAttributes(String extraKey, String extraValue) {
