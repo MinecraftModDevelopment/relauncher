@@ -145,17 +145,29 @@ tasks.named('shadowJar', ShadowJar).configure {
 tasks.named(JavaPlugin.JAR_TASK_NAME, Jar).configure {
     from sourceSets.api.output
     from sourceSets.launcher.output
-    manifest.attributes(makeManifestAttributes())
-    classifier("no-deps")
+    manifest.attributes(makeManifestAttributes('Main-Class', application.getMainClass().get()))
     description("Builds the project without its dependencies.")
     dependsOn(tasks.getByName("updateLicenses"))
 }
 
-def makeManifestAttributes() {
+tasks.create("apiJar", Jar).configure {
+    from sourceSets.api.output
+    manifest.attributes(makeManifestAttributes("", ""))
+    classifier("api")
+    description("Builds the api jar.")
+    dependsOn(tasks.getByName("updateLicenses"))
+}
+
+
+tasks.create('buildAll') {
+    dependsOn("build", "agentJar", "apiJar", "jar")
+}
+
+def makeManifestAttributes(String extraKey, String extraValue) {
     final var actualDateTime = OffsetDateTime.now(ZoneOffset.UTC).withNano(0)
     final var currentDateTime = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(actualDateTime)
-    return [
-            'Maven-Artifact'          : "${project.group}:${archivesBaseName}:${project.version}",
+    final var map = [
+            'Maven-Artifact'          : "${project.group}:${archivesBaseName.toLowerCase()}:${project.version}",
             'Timestamp'               : currentDateTime,
             'Specification-Title'     : archivesBaseName,
             'Specification-Vendor'    : 'Minecraft Mod Development',
@@ -165,8 +177,9 @@ def makeManifestAttributes() {
             'Implementation-Vendor'   : 'Minecraft Mod Development',
             'Implementation-Timestamp': currentDateTime,
             'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
-            'Built-On'                : "${project.libs.versions.jda.get()}-${project.libs.versions.chewtils.get()}",
-            'Main-Class'              : application.getMainClass().get(),
-            "Premain-Class"           : "com.mcmoddev.relauncher.Agent"
     ]
+    if (extraKey != null && !extraKey.isBlank()) {
+        map.put(extraKey, extraValue)
+    }
+    return map
 }

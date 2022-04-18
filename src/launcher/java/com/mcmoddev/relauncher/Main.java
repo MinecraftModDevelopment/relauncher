@@ -72,13 +72,6 @@ public final class Main {
             Files.createDirectories(RELAUNCHER_DIR);
         }
 
-        try {
-            copyAgent();
-        } catch (IOException e) {
-            LOG.error("Exception copying agent JAR: ", e);
-            throw new RuntimeException(e);
-        }
-
         final var cfgExists = Files.exists(CONFIG_PATH);
         Config config;
         try {
@@ -101,6 +94,14 @@ public final class Main {
         }
 
         updater = new DefaultJarUpdater(Paths.get(config.jarPath), updateChecker, config.jvmArgs, config.discord.loggingWebhook, discordIntegration);
+
+        try {
+            copyAgent(updater);
+        } catch (IOException e) {
+            LOG.error("Exception copying agent JAR: ", e);
+            throw new RuntimeException(e);
+        }
+
         if (config.checkingInfo.rate > -1) {
             SERVICE.scheduleAtFixedRate(updater, 0, config.checkingInfo.rate, TimeUnit.MINUTES);
             LOG.warn("Scheduled updater. Will run every {} minutes.", config.checkingInfo.rate);
@@ -110,12 +111,7 @@ public final class Main {
         }
     }
 
-    public static void copyAgent() throws IOException {
-        var agent = Main.class.getResourceAsStream("/agent.jar");
-        if (agent == null) {
-            // If it isn't a .jar, try finding a .zip
-            agent = Main.class.getResourceAsStream("/agent.zip");
-        }
-        Files.copy(Objects.requireNonNull(agent), AGENT_PATH, StandardCopyOption.REPLACE_EXISTING);
+    public static void copyAgent(JarUpdater updater) throws IOException {
+        Files.copy(updater.getAgentResource(), updater.getAgentPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 }

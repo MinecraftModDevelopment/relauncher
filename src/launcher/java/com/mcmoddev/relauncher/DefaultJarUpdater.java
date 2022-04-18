@@ -22,19 +22,20 @@ package com.mcmoddev.relauncher;
 
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.ProcessInfo;
-import com.mcmoddev.relauncher.api.Properties;
 import com.mcmoddev.relauncher.api.Release;
 import com.mcmoddev.relauncher.api.UpdateChecker;
 import com.mcmoddev.relauncher.api.connector.ProcessConnector;
 import com.mcmoddev.relauncher.discord.DiscordIntegration;
 import net.dv8tion.jda.api.entities.Activity;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -143,9 +144,9 @@ public class DefaultJarUpdater implements JarUpdater {
 
     private Process createProcess() {
         try {
-            if (!Files.exists(Main.AGENT_PATH)) {
+            if (!Files.exists(getAgentPath())) {
                 try {
-                    Main.copyAgent();
+                    Main.copyAgent(this);
                 } catch (IOException e) {
                     LOGGER.error("Exception copying agent JAR: ", e);
                     throw new RuntimeException(e);
@@ -180,7 +181,7 @@ public class DefaultJarUpdater implements JarUpdater {
         List<String> command = new ArrayList<>(javaArgs.size() + 2);
         command.add(findJavaBinary());
         final var webhookUrl = loggingWebhook == null ? "" : "/;/" + loggingWebhook.id() + "%%" + loggingWebhook.token();
-        command.add("-javaagent:" + Main.AGENT_PATH.toAbsolutePath() + "=" + Main.RMI_NAME + webhookUrl);
+        command.add("-javaagent:" + getAgentPath().toAbsolutePath() + "=" + Main.RMI_NAME + webhookUrl);
         command.addAll(javaArgs);
         properties.forEach((key, value) -> command.add("-D%s=\"%s\"".formatted(key, value)));
         command.add("-jar");
@@ -205,6 +206,11 @@ public class DefaultJarUpdater implements JarUpdater {
     @Override
     public UpdateChecker getUpdateChecker() {
         return updateChecker;
+    }
+
+    @Override
+    public @NotNull Path getAgentPath() {
+        return Main.AGENT_PATH;
     }
 
     @Override

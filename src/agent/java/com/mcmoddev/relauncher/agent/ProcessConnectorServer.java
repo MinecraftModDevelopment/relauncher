@@ -20,9 +20,9 @@
  */
 package com.mcmoddev.relauncher.agent;
 
+import com.mcmoddev.relauncher.Properties;
 import com.mcmoddev.relauncher.api.connector.MemoryUsage;
 import com.mcmoddev.relauncher.api.connector.ProcessConnector;
-import com.mcmoddev.relauncher.api.Properties;
 import com.mcmoddev.relauncher.api.connector.ThreadInfo;
 import com.mcmoddev.relauncher.api.StatusListener;
 

@@ -23,13 +23,25 @@ package com.mcmoddev.relauncher.api;
 import com.mcmoddev.relauncher.api.connector.ProcessConnector;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * An interface representing information about a process.
+ */
 public interface ProcessInfo {
 
+    /**
+     * @return the process
+     */
     Process process();
 
+    /**
+     * @return the version of the process
+     */
     @Nullable
     Release release();
 
+    /**
+     * @return the connector which is connected to the process
+     */
     @Nullable
     ProcessConnector connector();
 }

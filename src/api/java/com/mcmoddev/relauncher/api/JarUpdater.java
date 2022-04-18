@@ -20,9 +20,12 @@
  */
 package com.mcmoddev.relauncher.api;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -37,6 +40,7 @@ public interface JarUpdater extends Runnable {
 
     /**
      * Kills the currently running process and updates it.
+     *
      * @param release the release to update to
      */
     void killAndUpdate(final Release release) throws Exception;
@@ -64,7 +68,9 @@ public interface JarUpdater extends Runnable {
     /**
      * @return an optional which may contain the version of the current jar
      */
-    Optional<String> getJarVersion();
+    default Optional<String> getJarVersion() {
+        return Optional.empty();
+    }
 
     /**
      * @return the currently running process, or else null
@@ -77,4 +83,28 @@ public interface JarUpdater extends Runnable {
      */
     @Override
     void run();
+
+    /**
+     * Gets the agent jar as an {@link InputStream InputStream}.
+     *
+     * @return the agent
+     * @apiNote it is recommended the agent is stored as a resource
+     */
+    @NotNull
+    default InputStream getAgentResource() {
+        var agent = getClass().getResourceAsStream("/agent.jar");
+        if (agent == null) {
+            // If we can't find it as a .jar, try a .zip
+            agent = getClass().getResourceAsStream("/agent.zip");
+        }
+        return Objects.requireNonNull(agent);
+    }
+
+    /**
+     * Gets the path of the agent to be installed on the process.
+     *
+     * @return the path of the agent
+     */
+    @NotNull
+    Path getAgentPath();
 }

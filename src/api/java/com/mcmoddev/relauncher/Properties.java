@@ -18,11 +18,11 @@
  * USA
  * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  */
-package com.mcmoddev.relauncher.api;
+package com.mcmoddev.relauncher;
 
 public class Properties {
 
-    private static final String PREFIX = "com.mcmoddev.updatinglauncher.";
+    private static final String PREFIX = Properties.class.getPackageName() + ".";
 
     public static final String JAR_PATH = PREFIX + "jar";
 
