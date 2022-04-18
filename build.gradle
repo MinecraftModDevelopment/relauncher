@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter
 plugins {
     id 'application'
     id 'java-library'
-    // id 'maven'
+    id 'maven-publish'
     id 'eclipse'
     id 'idea'
     alias(libs.plugins.shadow)
@@ -28,6 +28,7 @@ sourceSets {
 configurations {
     shade
     launcherImplementation.extendsFrom(shade)
+    runtimeElements.extendsFrom(shade) // for the POM
 
     globalCompileOnly
     apiCompileOnly.extendsFrom(globalCompileOnly)
@@ -75,6 +76,8 @@ dependencies {
     agentImplementation libs.logback
     agentImplementation sourceSets.api.output
 
+    launcherImplementation sourceSets.main.output
+
     shade sourceSets.api.output
     shade libs.gson
     shade libs.logback
@@ -85,6 +88,18 @@ dependencies {
     shade libs.chewtils.command
 
     globalCompileOnly libs.annotations
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = group
+            artifactId = archivesBaseName.toLowerCase(Locale.ROOT)
+            version = project.version
+
+            from components.java
+        }
+    }
 }
 
 // Relocates all of the tasks from build
@@ -137,6 +152,7 @@ tasks.named('build').configure {
 
 tasks.named('shadowJar', ShadowJar).configure {
     dependsOn("copyAgentJar")
+    from sourceSets.main.output // The logback file
     from sourceSets.launcher.output
     configurations = [project.configurations.shade]
     classifier("all")
@@ -145,8 +161,16 @@ tasks.named('shadowJar', ShadowJar).configure {
 }
 
 tasks.named(JavaPlugin.JAR_TASK_NAME, Jar).configure {
+    dependsOn("generatePomFileForMavenPublication")
     from sourceSets.api.output
     from sourceSets.launcher.output
+
+    exclude "logback.xml"
+    into("META-INF/maven/${project.group}/${project.name}") {
+        from generatePomFileForMavenPublication
+        rename 'pom-default.xml', 'pom.xml'
+    }
+
     manifest.attributes(makeManifestAttributes('Main-Class', application.getMainClass().get()))
     description("Builds the project without its dependencies.")
     dependsOn(tasks.getByName("updateLicenses"))
@@ -161,9 +185,25 @@ tasks.create("apiJar", Jar).configure {
     group("build")
 }
 
+tasks.create("sourcesJar", Jar) {
+    dependsOn("launcherClasses")
+    from sourceSets.api.allSource
+    from sourceSets.launcher.allSource
+    classifier("sources")
+    group("build")
+    description("Builds the sources jar")
+}
+
+tasks.create("apiSourcesJar", Jar) {
+    dependsOn("apiClasses")
+    from sourceSets.api.allSource
+    classifier("api-sources")
+    group("build")
+    description("Builds the api sources jar")
+}
 
 tasks.create('buildAll') {
-    dependsOn("build", "agentJar", "apiJar", "jar")
+    dependsOn("build", "agentJar", "apiJar", "jar", "sourcesJar", "apiSourcesJar")
     group("build")
     description("Runs all the build tasks")
 }
