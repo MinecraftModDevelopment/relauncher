@@ -21,15 +21,17 @@
 package com.mcmoddev.relauncher.selfupdate;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class SelfUpdate {
 
@@ -44,23 +46,14 @@ public class SelfUpdate {
             Files.createDirectories(parent);
         }
         Files.deleteIfExists(jarPath);
+
         try (final var is = new BufferedInputStream(new URL(url).openStream())) {
             Files.copy(is, jarPath);
             System.out.println(colour("Update to '" + url + "' successful! Re-starting the launcher..."));
-            final var process = Runtime.getRuntime()
-                .exec(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win") ? "cmd /c " : "" + relaunchCmd,
-                    null,
-                    parent == null ? Path.of("").toFile() : parent.toFile()
-                );
 
-            try (final var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                // Redirect console
-                // TODO find a better way to inherit IO, or use ProcessBuilder and find a way to split the command
-                String line;
-                while (process.isAlive() && (line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
-            }
+            new ProcessBuilder(resolveScript(relaunchCmd))
+                .inheritIO()
+                .start();
 
             System.exit(0);
         }
@@ -71,5 +64,26 @@ public class SelfUpdate {
             + " \033[94;1m====\033[0m";
     }
 
+    public static String readAllLines(InputStream is) throws IOException {
+        return new String(is.readAllBytes());
+    }
+
+    public static List<String> resolveScript(String script) throws IOException {
+        final var directory = Path.of(".relauncher");
+        var scriptFull = readAllLines(Objects.requireNonNull(SelfUpdate.class.getResourceAsStream("/relauncher-restart")));
+        final Path path;
+        final List<String> cmd;
+        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win")) {
+            path = directory.resolve("relaunch.bat").toAbsolutePath();
+            scriptFull = scriptFull.formatted("cmd /c " + script);
+            cmd = List.of(path.toString());
+        } else {
+            path = directory.resolve("relaunch.sh").toAbsolutePath();
+            scriptFull = scriptFull.formatted(script);
+            cmd = List.of("sh", path.toString());
+        }
+        Files.copy(new ByteArrayInputStream(scriptFull.getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
+        return cmd;
+    }
 
 }
