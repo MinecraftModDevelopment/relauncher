@@ -111,9 +111,6 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
         builder
             .append(LEVEL_TO_EMOTE.getOrDefault(event.getLevel(), UNKNOWN_EMOTE));
         builder
-            .append(" ")
-            .append(event.getLevel().toString());
-        builder
             .append(" [**")
             .append(event.getLoggerName());
         if (event.getMarker() != null) {
@@ -145,7 +142,7 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
     private String buildStacktrace(IThrowableProxy exception) {
         final var builder = new StringBuilder();
         for (int i = 0; i < exception.getStackTraceElementProxyArray().length; i++) {
-            builder.append("\t at ").append(exception.getStackTraceElementProxyArray()[i].toString())
+            builder.append("\t ").append(exception.getStackTraceElementProxyArray()[i].toString())
                 .append(CoreConstants.LINE_SEPARATOR);
         }
         return builder.toString();

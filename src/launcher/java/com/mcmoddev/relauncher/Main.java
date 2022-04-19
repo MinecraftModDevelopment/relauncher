@@ -248,4 +248,8 @@ public final class Main {
             throw new UncheckedIOException(e);
         }
     }
+
+    private Main() {
+        throw new UnsupportedOperationException("Cannot instantiate a utility class");
+    }
 }
