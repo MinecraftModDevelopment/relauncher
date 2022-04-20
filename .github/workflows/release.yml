@@ -14,6 +14,8 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 17
+          distribution: 'zulu'
+          check-latest: true
 # TODO make the changelog actually be built
 #      - name: Build Changelog
 #        id: build_changelog
