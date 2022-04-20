@@ -96,7 +96,13 @@ dependencies {
 
     // Discord stuff
     shade libs.jda
-    shade libs.chewtils.command
+    shade(libs.chewtils) {
+        // Exclude unneeded packages without using a specific chewtils module
+        // to avoid subproject weirdness
+        exclude module: 'jda-chewtils-menu'
+        exclude module: 'jda-chewtils-examples'
+        exclude module: 'jda-chewtils-auth'
+    }
 
     globalCompileOnly libs.annotations
 }
