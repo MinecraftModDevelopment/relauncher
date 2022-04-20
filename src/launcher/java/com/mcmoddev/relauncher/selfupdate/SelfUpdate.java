@@ -29,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.DosFileAttributeView;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -83,6 +84,8 @@ public class SelfUpdate {
             cmd = List.of("sh", path.toString());
         }
         Files.copy(new ByteArrayInputStream(scriptFull.getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
+        final var atView = Files.getFileAttributeView(path, DosFileAttributeView.class);
+        atView.setHidden(true);
         return cmd;
     }
 

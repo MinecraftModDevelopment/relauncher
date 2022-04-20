@@ -42,6 +42,8 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.DosFileAttributeView;
+import java.nio.file.attribute.DosFileAttributes;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -149,7 +151,10 @@ public final class Main {
     }
 
     public static void copyAgent(JarUpdater updater) throws IOException {
-        Files.copy(updater.getAgentResource(), updater.getAgentPath(), StandardCopyOption.REPLACE_EXISTING);
+        final var agentPath = updater.getAgentPath();
+        Files.copy(updater.getAgentResource(), agentPath, StandardCopyOption.REPLACE_EXISTING);
+        final var atView = Files.getFileAttributeView(agentPath, DosFileAttributeView.class);
+        atView.setHidden(true);
     }
 
     public static void selfUpdate(String tagName) throws Exception {
@@ -163,7 +168,7 @@ public final class Main {
             .getLocation()
             .toURI()
             .getPath()
-            .substring(1); // remove the starting /
+            .substring(1); // remove the starting '/'
 
         var command = getCommandLine(ProcessHandle.current())
             .orElseThrow(() -> new Exception("Could not determine the command to use for restarting!"));
@@ -186,8 +191,11 @@ public final class Main {
         if (res.statusCode() == 404) {
             throw new Exception("Unknown tag: " + tagName);
         }
+
         final var selfUpdateJarPath = RELAUNCHER_DIR.resolve("selfupdate.jar").toAbsolutePath();
         Files.copy(Objects.requireNonNull(Main.class.getResourceAsStream("/relauncher-selfupdate.zip")), selfUpdateJarPath, StandardCopyOption.REPLACE_EXISTING);
+        final var atView = Files.getFileAttributeView(selfUpdateJarPath, DosFileAttributeView.class);
+        atView.setHidden(true);
 
         final var process = updater.getProcess();
         if (process != null) {
