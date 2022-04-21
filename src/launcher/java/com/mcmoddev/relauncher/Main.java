@@ -159,8 +159,10 @@ public final class Main {
     public static void copyAgent(JarUpdater updater) throws IOException {
         final var agentPath = updater.getAgentPath();
         Files.copy(updater.getAgentResource(), agentPath, StandardCopyOption.REPLACE_EXISTING);
-        final var atView = Files.getFileAttributeView(agentPath, DosFileAttributeView.class);
-        atView.setHidden(true);
+        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win")) {
+            final var atView = Files.getFileAttributeView(agentPath, DosFileAttributeView.class);
+            atView.setHidden(true);
+        }
     }
 
     public static void selfUpdate(String tagName) throws Exception {
@@ -200,8 +202,10 @@ public final class Main {
 
         final var selfUpdateJarPath = RELAUNCHER_DIR.resolve("selfupdate.jar").toAbsolutePath();
         Files.copy(Objects.requireNonNull(Main.class.getResourceAsStream("/relauncher-selfupdate.zip")), selfUpdateJarPath, StandardCopyOption.REPLACE_EXISTING);
-        final var atView = Files.getFileAttributeView(selfUpdateJarPath, DosFileAttributeView.class);
-        atView.setHidden(true);
+        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win")) {
+            final var atView = Files.getFileAttributeView(selfUpdateJarPath, DosFileAttributeView.class);
+            atView.setHidden(true);
+        }
 
         final var process = updater.getProcess();
         if (process != null) {

@@ -104,8 +104,10 @@ public class SelfUpdate {
             cmd = List.of("sh", path.toString());
         }
         Files.copy(new ByteArrayInputStream(scriptFull.getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
-        final var atView = Files.getFileAttributeView(path, DosFileAttributeView.class);
-        atView.setHidden(true);
+        if (os.contains("win")) {
+            final var atView = Files.getFileAttributeView(path, DosFileAttributeView.class);
+            atView.setHidden(true);
+        }
         return cmd;
     }
 
