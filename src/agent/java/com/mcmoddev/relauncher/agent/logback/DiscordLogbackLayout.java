@@ -124,10 +124,14 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
             .append(CoreConstants.LINE_SEPARATOR);
 
         if (event.getThrowableProxy() != null) {
-            builder.append(event.getThrowableProxy().getMessage())
+            final var t = event.getThrowableProxy();
+            builder
+                .append(t.getClassName())
+                .append(": ")
+                .append(t.getMessage())
                 .append(CoreConstants.LINE_SEPARATOR);
 
-            final String stacktrace = buildStacktrace(event.getThrowableProxy());
+            final String stacktrace = buildStacktrace(t);
             builder.append("Stacktrace: ");
             if (stacktrace.length() > 1800) {
                 builder.append("*Too long to be displayed.*");

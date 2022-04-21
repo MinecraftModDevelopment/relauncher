@@ -29,17 +29,23 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class FileCommand extends RLCommand {
     private final Path basePath;
@@ -78,7 +84,8 @@ public class FileCommand extends RLCommand {
                     help = "Gets a file.";
                     enabledRoles = enabledRoles();
                     options = List.of(
-                        new OptionData(OptionType.STRING, "path", "The path of the file to get.", true)
+                        new OptionData(OptionType.STRING, "path", "The path of the file to get.", true),
+                        new OptionData(OptionType.BOOLEAN, "zip", "If true, the provided directory at the path, will be zipped and sent.")
                     );
                 }
             },
@@ -154,6 +161,23 @@ public class FileCommand extends RLCommand {
     }
 
     protected void onFileGet(final SlashCommandEvent event) {
+        final var doZip = event.getOption("zip", false, OptionMapping::getAsBoolean);
+        if (doZip) {
+            final var dir = basePath.resolve(event.getOption("path", "", OptionMapping::getAsString));
+            event.deferReply()
+                .flatMap(hook -> {
+                    try {
+                        final var data = filesZip(dir);
+                        return hook.editOriginal(data, "dir.zip");
+                    } catch (IOException e) {
+                        Main.LOG.error("Exception trying to zip directory '{}': ", dir, e);
+                        return hook.editOriginal("Exception trying to zip directory: " + e.getLocalizedMessage());
+                    }
+                })
+                .queue();
+            return;
+        }
+
         final var file = basePath.resolve(event.getOption("path", "", OptionMapping::getAsString));
         if (!canAccessFile(file)) {
             event.deferReply(true).setContent("You do not have access to the specified path.").queue();
@@ -182,8 +206,47 @@ public class FileCommand extends RLCommand {
         return true;
     }
 
+    public byte[] filesZip(Path directory) throws IOException {
+        final var bo = new ByteArrayOutputStream();
+        final var zipOut = new ZipOutputStream(bo);
+        Files.walkFileTree(directory, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                try {
+                    if (canAccessFile(file.toAbsolutePath())) {
+                        final var zipEntry = new ZipEntry(file.toString());
+                        zipOut.putNextEntry(zipEntry);
+                        zipOut.write(Files.readAllBytes(file));
+                        zipOut.closeEntry();
+                    }
+                } catch (IOException e) {
+                    sneakyThrow(e);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        zipOut.close();
+        return bo.toByteArray();
+    }
+
     protected String[] enabledRoles() {
         return enabledRoles;
+    }
+
+    /**
+     * Sneakily throws the given exception, bypassing compile-time checks for
+     * checked exceptions.
+     *
+     * <p>
+     * <strong>This method will never return normally.</strong> The exception passed
+     * to the method is always rethrown.
+     * </p>
+     *
+     * @param ex the exception to sneakily rethrow
+     */
+    @SuppressWarnings("unchecked")
+    public static <E extends Throwable> void sneakyThrow(Throwable ex) throws E {
+        throw (E) ex;
     }
 
     private static abstract class Cmd extends SlashCommand {
