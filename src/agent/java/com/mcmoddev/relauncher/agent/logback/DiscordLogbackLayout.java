@@ -124,6 +124,9 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
             .append(CoreConstants.LINE_SEPARATOR);
 
         if (event.getThrowableProxy() != null) {
+            builder.append(event.getThrowableProxy().getMessage())
+                .append(CoreConstants.LINE_SEPARATOR);
+
             final String stacktrace = buildStacktrace(event.getThrowableProxy());
             builder.append("Stacktrace: ");
             if (stacktrace.length() > 1800) {
