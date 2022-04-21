@@ -52,11 +52,29 @@ public class SelfUpdate {
             Files.copy(is, jarPath);
             System.out.println(colour("Update to '" + url + "' successful! Re-starting the launcher..."));
 
-            new ProcessBuilder(resolveScript(relaunchCmd))
-                .inheritIO()
-                .start();
-
-            System.exit(0);
+            final var os = getOS();
+            final var scriptPath = resolveScriptPath(os);
+            final var restartCmd = resolveScript(getOS(), relaunchCmd);
+            if (!os.contains("win")) { // Not windows, so we need to make the file executable
+                final var process = new ProcessBuilder("chmod", "+x", scriptPath.toString())
+                    .inheritIO()
+                    .start();
+                process.onExit().whenComplete(($, $$) -> {
+                    try {
+                        new ProcessBuilder(restartCmd)
+                            .inheritIO()
+                            .start();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.exit(0);
+                });
+            } else {
+                new ProcessBuilder(restartCmd)
+                    .inheritIO()
+                    .start();
+                System.exit(0);
+            }
         }
     }
 
@@ -69,17 +87,19 @@ public class SelfUpdate {
         return new String(is.readAllBytes());
     }
 
-    public static List<String> resolveScript(String script) throws IOException {
+    public static Path resolveScriptPath(String os) {
         final var directory = Path.of(".relauncher");
+        return os.contains("win") ? directory.resolve("relaunch.bat").toAbsolutePath() : directory.resolve("relaunch.sh").toAbsolutePath();
+    }
+
+    public static List<String> resolveScript(String os, String script) throws IOException {
         var scriptFull = readAllLines(Objects.requireNonNull(SelfUpdate.class.getResourceAsStream("/relauncher-restart")));
-        final Path path;
+        final Path path = resolveScriptPath(os);
         final List<String> cmd;
-        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win")) {
-            path = directory.resolve("relaunch.bat").toAbsolutePath();
+        if (os.contains("win")) {
             scriptFull = scriptFull.formatted("cmd /c " + script);
             cmd = List.of(path.toString());
         } else {
-            path = directory.resolve("relaunch.sh").toAbsolutePath();
             scriptFull = scriptFull.formatted(script);
             cmd = List.of("sh", path.toString());
         }
@@ -89,4 +109,7 @@ public class SelfUpdate {
         return cmd;
     }
 
+    private static String getOS() {
+        return System.getProperty("os.name").toLowerCase(Locale.ROOT);
+    }
 }
