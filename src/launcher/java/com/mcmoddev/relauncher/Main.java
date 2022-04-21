@@ -143,6 +143,12 @@ public final class Main {
             updater.tryFirstStart();
             SERVICE.allowCoreThreadTimeOut(true);
         }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (discordIntegration != null) {
+                discordIntegration.shutdown();
+            }
+        }));
     }
 
     @Nullable
@@ -211,6 +217,7 @@ public final class Main {
             )
             .inheritIO()
             .start();
+
         System.exit(0);
     }
 

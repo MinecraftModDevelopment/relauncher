@@ -73,8 +73,6 @@ public final class DefaultDiscordIntegration implements DiscordIntegration {
                 .setGatewayPool(Main.SERVICE)
                 .build()
                 .setRequiredScopes("applications.commands", "bot");
-
-            Runtime.getRuntime().addShutdownHook(new Thread(jda::shutdownNow));
         } catch (LoginException e) {
             throw new RuntimeException("Please provide a valid bot token!");
         }
@@ -84,5 +82,10 @@ public final class DefaultDiscordIntegration implements DiscordIntegration {
     @Override
     public void setActivity(final ActivityType type, final String name) {
         jda.getPresence().setActivity(Activity.of(Activity.ActivityType.valueOf(type.name()), name));
+    }
+
+    @Override
+    public void shutdown() {
+        jda.shutdown();
     }
 }

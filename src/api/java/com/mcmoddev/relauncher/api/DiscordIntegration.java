@@ -30,6 +30,13 @@ public interface DiscordIntegration {
      */
     void setActivity(ActivityType type, String name);
 
+    /**
+     * Shuts down the integration.
+     */
+    default void shutdown() {
+
+    }
+
     enum ActivityType {
         PLAYING,
         STREAMING,
