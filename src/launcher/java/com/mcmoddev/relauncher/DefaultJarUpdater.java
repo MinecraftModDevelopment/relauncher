@@ -134,7 +134,7 @@ public class DefaultJarUpdater implements JarUpdater {
     public void update(final Release release) throws Exception {
         final var discordIntegration = Main.getDiscordIntegration();
         if (discordIntegration != null) {
-            discordIntegration.setActivity(DiscordIntegration.ActivityType.CUSTOM_STATUS, "Updating a process \uD83D\uDD04");
+            discordIntegration.setActivity(DiscordIntegration.ActivityType.PLAYING, "the updating game \uD83D\uDD04");
         }
 
         final var parent = jarPath.getParent();
