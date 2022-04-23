@@ -33,15 +33,26 @@ import java.nio.file.attribute.DosFileAttributeView;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 public class SelfUpdate {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Thread.sleep(1000 * 3); // Sleep 3 seconds
-        final var jarPath = Path.of(args[0]).toAbsolutePath();
-        final var relaunchCmd = args[1].replace("java  -jar", "java -jar");
-        final var url = args[2];
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+        final var jarPath = Path.of(args[1]).toAbsolutePath();
+        final var relaunchCmd = args[2].replace("java  -jar", "java -jar");
+        final var url = args[3];
+        final var launcherPId = Long.parseLong(args[0]);
+        final var launcherProcess = ProcessHandle.of(launcherPId);
+        if (launcherProcess.isPresent()) {
+            final var handle = launcherProcess.get();
+            if (handle.isAlive()) {
+                handle.onExit().get(); // Await the launcher exit
+            }
+        }
+        doUpdate(jarPath, relaunchCmd, url);
+    }
 
+    public static void doUpdate(Path jarPath, String relaunchCmd, String url) throws IOException {
         final var parent = jarPath.getParent();
         if (parent != null) {
             Files.createDirectories(parent);

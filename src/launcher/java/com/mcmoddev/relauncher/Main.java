@@ -214,7 +214,9 @@ public final class Main {
 
         new ProcessBuilder()
             .command(
-                findJavaBinary(), "-jar", selfUpdateJarPath.toString(),
+                findJavaBinary(), "-jar",
+                String.valueOf(ProcessHandle.current().pid()),
+                selfUpdateJarPath.toString(),
                 jarPath,
                 command,
                 url
