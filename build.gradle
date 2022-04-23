@@ -23,6 +23,7 @@ sourceSets {
     api {}
     agent {}
     launcher {}
+    selfupdate {}
 }
 
 configurations {
@@ -161,10 +162,7 @@ tasks.register('copyAgentJar', Copy) {
 }
 
 tasks.register('selfUpdateJar', Jar).configure {
-    from(sourceSets.launcher.output) {
-        include "com/mcmoddev/relauncher/selfupdate/**/*.class"
-        include "relauncher-restart"
-    }
+    from sourceSets.selfupdate.output
     classifier 'selfupdate'
     group 'build'
     description 'Builds the selfupdate JAR'
@@ -180,13 +178,8 @@ tasks.register('copySelfUpdateJar', Copy) {
 }
 
 tasks.named('launcherClasses').configure {
-    dependsOn 'copyAgentJar'
+    dependsOn 'copyAgentJar', 'copySelfUpdateJar'
     mustRunAfter(tasks.named('copyAgentJar'))
-    doLast {
-        // TODO: remove this direct execution of tasks, either to mustRunAfters or project.copy
-        tasks.named('selfUpdateJar').get().copy()
-        tasks.named('copySelfUpdateJar').get().copy()
-    }
 }
 
 tasks.named('build').configure {
@@ -196,10 +189,7 @@ tasks.named('build').configure {
 tasks.named('shadowJar', ShadowJar).configure {
     dependsOn 'copyAgentJar'
     from sourceSets.main.output // The logback file
-    from(sourceSets.launcher.output) {
-        exclude "com/mcmoddev/relauncher/selfupdate/**/*.class"
-        exclude "relauncher-restart"
-    }
+    from sourceSets.launcher.output
     configurations = [
             project.configurations.shade,
             project.configurations.logback
@@ -212,10 +202,7 @@ tasks.named('shadowJar', ShadowJar).configure {
 tasks.named(JavaPlugin.JAR_TASK_NAME, Jar).configure {
     dependsOn 'generatePomFileForMavenPublication'
     from sourceSets.api.output
-    from(sourceSets.launcher.output) {
-        exclude "com/mcmoddev/relauncher/selfupdate/**.class"
-        exclude "relauncher-restart"
-    }
+    from sourceSets.launcher.output
 
     exclude 'logback.xml'
     into("META-INF/maven/${project.group}/${project.name}") {
@@ -240,9 +227,7 @@ tasks.register('apiJar', Jar).configure {
 tasks.register('sourcesJar', Jar).configure {
     dependsOn 'launcherClasses'
     from sourceSets.api.allSource
-    from(sourceSets.launcher.allSource) {
-        exclude "com/mcmoddev/relauncher/selfupdate/**.java"
-    }
+    from sourceSets.launcher.allSource
     classifier 'sources'
     group 'build'
     description 'Builds the sources jar'
