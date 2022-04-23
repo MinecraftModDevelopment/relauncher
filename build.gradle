@@ -120,14 +120,16 @@ publishing {
 }
 
 // Relocates all of the tasks from build
-tasks.stream().filter({it.group == "build" && it.name.toLowerCase(Locale.ROOT).endsWith("classes")}).forEach({it.group = "other"})
+tasks.configureEach {
+    if (it.group == 'build') it.group = 'other'
+}
 
-tasks.create("agentJar", Jar).configure {
+tasks.register('agentJar', Jar).configure {
     from sourceSets.api.output
     from sourceSets.agent.output
-    classifier("agent")
-    group("build")
-    description("Builds the agent JAR")
+    classifier 'agent'
+    group 'build'
+    description 'Builds the agent JAR'
 
     final var actualDateTime = OffsetDateTime.now(ZoneOffset.UTC).withNano(0)
     final var currentDateTime = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(actualDateTime)
@@ -149,49 +151,50 @@ tasks.create("agentJar", Jar).configure {
     }
 }
 
-tasks.create("copyAgentJar", Copy) {
-    dependsOn("agentJar")
-    mustRunAfter(tasks.getByName("agentJar"))
-    mustRunAfter(tasks.getByName("processLauncherResources"))
+tasks.register('copyAgentJar', Copy) {
+    dependsOn 'agentJar'
+    mustRunAfter(tasks.named('agentJar'))
+    mustRunAfter(tasks.named('processLauncherResources'))
     from "$buildDir/libs/$archivesBaseName-$version-agent.jar"
     into "$buildDir/resources/launcher/"
     rename "$archivesBaseName-$version-agent.jar", "relauncher-agent.zip"
 }
 
-tasks.create("selfUpdateJar", Jar).configure {
+tasks.register('selfUpdateJar', Jar).configure {
     from(sourceSets.launcher.output) {
         include "com/mcmoddev/relauncher/selfupdate/**/*.class"
         include "relauncher-restart"
     }
-    classifier("selfupdate")
-    group("build")
-    description("Builds the selfupdate JAR")
+    classifier 'selfupdate'
+    group 'build'
+    description 'Builds the selfupdate JAR'
     manifest.attributes(makeManifestAttributes('Main-Class', 'com.mcmoddev.relauncher.selfupdate.SelfUpdate'))
 }
 
-tasks.create("copySelfUpdateJar", Copy) {
-    dependsOn("selfUpdateJar")
-    mustRunAfter(tasks.getByName("processLauncherResources"))
+tasks.register('copySelfUpdateJar', Copy) {
+    dependsOn 'selfUpdateJar'
+    mustRunAfter(tasks.named('processLauncherResources'))
     from "$buildDir/libs/$archivesBaseName-$version-selfupdate.jar"
     into "$buildDir/resources/launcher/"
     rename "$archivesBaseName-$version-selfupdate.jar", "relauncher-selfupdate.zip"
 }
 
-tasks.getByName('launcherClasses').configure {
-    dependsOn("copyAgentJar")
-    mustRunAfter(tasks.getByName("copyAgentJar"))
+tasks.named('launcherClasses').configure {
+    dependsOn 'copyAgentJar'
+    mustRunAfter(tasks.named('copyAgentJar'))
     doLast {
-        tasks.getByName('selfUpdateJar').copy()
-        tasks.getByName('copySelfUpdateJar').copy()
+        // TODO: remove this direct execution of tasks, either to mustRunAfters or project.copy
+        tasks.named('selfUpdateJar').copy()
+        tasks.named('copySelfUpdateJar').copy()
     }
 }
 
 tasks.named('build').configure {
-    dependsOn("copyAgentJar")
+    dependsOn('copyAgentJar')
 }
 
 tasks.named('shadowJar', ShadowJar).configure {
-    dependsOn("copyAgentJar")
+    dependsOn 'copyAgentJar'
     from sourceSets.main.output // The logback file
     from(sourceSets.launcher.output) {
         exclude "com/mcmoddev/relauncher/selfupdate/**/*.class"
@@ -201,62 +204,62 @@ tasks.named('shadowJar', ShadowJar).configure {
             project.configurations.shade,
             project.configurations.logback
     ]
-    classifier("all")
-    group("build")
-    description("Builds the whole project with its dependencies.")
+    classifier 'all'
+    group 'build'
+    description 'Builds the whole project with its dependencies.'
 }
 
 tasks.named(JavaPlugin.JAR_TASK_NAME, Jar).configure {
-    dependsOn("generatePomFileForMavenPublication")
+    dependsOn 'generatePomFileForMavenPublication'
     from sourceSets.api.output
     from(sourceSets.launcher.output) {
         exclude "com/mcmoddev/relauncher/selfupdate/**.class"
         exclude "relauncher-restart"
     }
 
-    exclude "logback.xml"
+    exclude 'logback.xml'
     into("META-INF/maven/${project.group}/${project.name}") {
-        from generatePomFileForMavenPublication
+        from tasks.named('generatePomFileForMavenPublication')
         rename 'pom-default.xml', 'pom.xml'
     }
 
     manifest.attributes(makeManifestAttributes('Main-Class', application.getMainClass().get()))
-    description("Builds the project without its dependencies.")
-    dependsOn(tasks.getByName("updateLicenses"))
+    description 'Builds the project without its dependencies.'
+    dependsOn tasks.named('updateLicenses')
 }
 
-tasks.create("apiJar", Jar).configure {
+tasks.register('apiJar', Jar).configure {
     from sourceSets.api.output
     manifest.attributes(makeManifestAttributes("", ""))
-    classifier("api")
-    description("Builds the api jar.")
-    dependsOn(tasks.getByName("updateLicenses"))
-    group("build")
+    classifier 'api'
+    description 'Builds the api jar.'
+    dependsOn tasks.named('updateLicenses')
+    group 'build'
 }
 
-tasks.create("sourcesJar", Jar) {
-    dependsOn("launcherClasses")
+tasks.register('sourcesJar', Jar).configure {
+    dependsOn 'launcherClasses'
     from sourceSets.api.allSource
     from(sourceSets.launcher.allSource) {
         exclude "com/mcmoddev/relauncher/selfupdate/**.java"
     }
-    classifier("sources")
-    group("build")
-    description("Builds the sources jar")
+    classifier 'sources'
+    group 'build'
+    description 'Builds the sources jar'
 }
 
-tasks.create("apiSourcesJar", Jar) {
-    dependsOn("apiClasses")
+tasks.register('apiSourcesJar', Jar).configure {
+    dependsOn 'apiClasses'
     from sourceSets.api.allSource
-    classifier("api-sources")
-    group("build")
-    description("Builds the api sources jar")
+    classifier 'api-sources'
+    group 'build'
+    description 'Builds the api sources jar'
 }
 
-tasks.create('buildAll') {
+tasks.register('buildAll').configure { // TODO: replace dependsOn in this task to dependsOn in assemble task, and bring back build task 
     dependsOn("build", "agentJar", "apiJar", "jar", "sourcesJar", "apiSourcesJar")
-    group("build")
-    description("Runs all the build tasks")
+    group 'build'
+    description 'Runs all the build tasks'
 }
 
 def makeManifestAttributes(String extraKey, String extraValue) {
