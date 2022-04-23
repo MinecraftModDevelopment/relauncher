@@ -184,8 +184,8 @@ tasks.named('launcherClasses').configure {
     mustRunAfter(tasks.named('copyAgentJar'))
     doLast {
         // TODO: remove this direct execution of tasks, either to mustRunAfters or project.copy
-        tasks.named('selfUpdateJar').copy()
-        tasks.named('copySelfUpdateJar').copy()
+        tasks.named('selfUpdateJar').get().copy()
+        tasks.named('copySelfUpdateJar').get().copy()
     }
 }
 
