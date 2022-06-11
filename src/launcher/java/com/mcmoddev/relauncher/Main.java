@@ -88,7 +88,7 @@ public final class Main {
     public static final ScheduledThreadPoolExecutor SERVICE;
 
     static {
-        final var service = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, r -> new Thread(THREAD_GROUP, r, "UpdatingLauncher"));
+        final var service = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, r -> new Thread(THREAD_GROUP, r, "ReLauncher"));
         service.setKeepAliveTime(1, TimeUnit.HOURS);
         SERVICE = service;
     }

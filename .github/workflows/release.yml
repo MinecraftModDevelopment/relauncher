@@ -16,12 +16,6 @@ jobs:
           java-version: 17
           distribution: 'zulu'
           check-latest: true
-      # - name: Build Changelog
-      #  id: build_changelog
-      #  uses: mikepenz/release-changelog-builder-action@v1
-      #  with:
-      #    commitMode: true
-      #    token: ${{ github.token }}
       - name: Setup ENV
         run: echo "TAG=${GITHUB_REF:10}" >> $GITHUB_ENV
       - name: Grant execute permission for gradlew
@@ -31,6 +25,12 @@ jobs:
         run: ./gradlew buildAll -Pversion=${{ env.TAG }}
         env:
           BUILD_NUMBER: ${{ github.run_number }}
+      - name: Make Changelog
+        uses: FabricMC/fabric-action-scripts@v1
+        id: changelog
+        with:
+          context: changelog
+          workflow_id: release.yml
       - name: Create release
         id: create_release
         uses: ncipollo/release-action@v1
@@ -38,7 +38,7 @@ jobs:
           token: ${{ github.token }}
           tag: ${{ github.ref }}
           name: Release ${{ env.TAG }}
-          # body: ${{steps.build_changelog.outputs.changelog}}
+          body: ${{ steps.changelog.outputs.changelog }}
           artifactErrorsFailBuild: true
           artifacts: 'build/libs/**.jar'
           generateReleaseNotes: true

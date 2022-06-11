@@ -21,6 +21,7 @@
 package com.mcmoddev.relauncher;
 
 import com.mcmoddev.relauncher.api.BaseProcessManager;
+import com.mcmoddev.relauncher.api.CustomScriptManager;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.LauncherConfig;
@@ -68,4 +69,8 @@ record WrappingFactory<T extends LauncherConfig>(LauncherFactory<T> delegate) im
         return delegate.getSelfUpdateUrl(tagName);
     }
 
+    @Override
+    public CustomScriptManager createScriptManager(final T config) {
+        return delegate.createScriptManager(config);
+    }
 }

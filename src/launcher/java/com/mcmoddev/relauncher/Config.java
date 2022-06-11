@@ -21,14 +21,20 @@
 package com.mcmoddev.relauncher;
 
 import com.mcmoddev.relauncher.api.LauncherConfig;
+import io.leangen.geantyref.TypeToken;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Required;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -47,6 +53,11 @@ public class Config implements LauncherConfig {
         - JAR => manages a jar, supports updating
         - CUSTOM_SCRIPT => manages a custom java launch script, does NOT support updating""")
     public LauncherMode mode = LauncherMode.JAR;
+
+    @Override
+    public LauncherMode getLauncherMode() {
+        return mode;
+    }
 
     @Setting("jar_path")
     @Comment("Only if the mode is JAR, the path of the jar to launch.")
@@ -164,6 +175,7 @@ public class Config implements LauncherConfig {
             .emitComments(true)
             .prettyPrinting(true)
             .path(path)
+            .defaultOptions(opt -> opt.serializers(builder -> builder.register(TypeToken.get(LauncherMode.class), new ModeSerializer())))
             .build();
         final var configSerializer = Objects.requireNonNull(loader.defaultOptions().serializers().get(cfgType));
         final var type = io.leangen.geantyref.TypeToken.get(cfgType).getType();
@@ -185,12 +197,35 @@ public class Config implements LauncherConfig {
         final var configRef = loader.loadToReference();
 
         { // Add new values to the config
-            final var inMemoryNode = CommentedConfigurationNode.factory().createNode();
+            final var inMemoryNode = CommentedConfigurationNode
+                .root(loader.defaultOptions());
             configSerializer.serialize(type, defaultValue, inMemoryNode);
             configRef.node().mergeFrom(inMemoryNode);
             configRef.save();
         }
 
         return configRef.referenceTo(cfgType).get();
+    }
+
+    private static final class ModeSerializer implements TypeSerializer<LauncherMode> {
+
+        @Override
+        public LauncherMode deserialize(final Type type, final ConfigurationNode node) throws SerializationException {
+            final var str = node.getString();
+            if (str == null)
+                return null;
+            for (final var val : LauncherMode.class.getEnumConstants())
+                if (str.equalsIgnoreCase(val.toString()))
+                    return val;
+            return null;
+        }
+
+        @Override
+        public void serialize(final Type type, @Nullable final LauncherMode obj, final ConfigurationNode node) throws SerializationException {
+            if (obj == null)
+                node.raw(null);
+            else
+                node.set(obj.toString());
+        }
     }
 }

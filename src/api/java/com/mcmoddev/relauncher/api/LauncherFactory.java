@@ -64,8 +64,14 @@ public interface LauncherFactory<T extends LauncherConfig> {
     @NotNull
     JarUpdater createUpdater(T config);
 
+    /**
+     * Creates a {@link CustomScriptManager}.
+     *
+     * @param config the launcher config
+     * @return the script manager
+     */
     default CustomScriptManager createScriptManager(T config) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Custom Script Managers are unsupported by this factory.");
     }
 
     /**
@@ -73,7 +79,7 @@ public interface LauncherFactory<T extends LauncherConfig> {
      * The launcher only calls this method if Discord Integration is enabled in the config.
      *
      * @param config  the launcher config
-     * @param updater the {@link BaseProcessManager process manager}
+     * @param manager the {@link BaseProcessManager process manager}
      * @return the integration instance. Can be {@code null}.
      */
     @Nullable
@@ -96,5 +102,6 @@ public interface LauncherFactory<T extends LauncherConfig> {
     @Nullable
     String getSelfUpdateUrl(String tagName) throws IOException, InterruptedException;
 
-    record RepoInfo(String owner, String repo) {}
+    record RepoInfo(String owner, String repo) {
+    }
 }
