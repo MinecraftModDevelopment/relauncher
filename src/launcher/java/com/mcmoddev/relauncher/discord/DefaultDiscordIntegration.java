@@ -23,6 +23,7 @@ package com.mcmoddev.relauncher.discord;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.Main;
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.discord.commands.ProfilingCommand;
@@ -44,7 +45,7 @@ import java.util.function.Supplier;
 public final class DefaultDiscordIntegration implements DiscordIntegration {
     private final JDA jda;
 
-    public DefaultDiscordIntegration(final Path basePath, final Config.Discord config, final Supplier<JarUpdater> updater) {
+    public DefaultDiscordIntegration(final Path basePath, final Config.Discord config, final Supplier<BaseProcessManager> updater) {
         final var statusCmd = new StatusCommand(updater, config);
         final var commandClient = new CommandClientBuilder()
             .setOwnerId("0000000000")

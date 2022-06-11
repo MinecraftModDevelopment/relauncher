@@ -74,12 +74,15 @@ public class ProcessConnectorServer implements ProcessConnector {
         } catch (UnknownHostException e) {
             map.put("host", "unknown");
         }
-        final String jar = System.getProperty(Properties.JAR_PATH);
-        map.put("appJar", jar);
-        try {
-            map.put("appClass", new JarFile(jar).getManifest().getMainAttributes().getValue("Main-Class"));
-        } catch (Exception e) {
-            map.put("appClass", "unknown");
+
+        final String jar = System.getProperty(Properties.JAR_PATH, null);
+        if (jar != null) {
+            map.put("appJar", jar);
+            try {
+                map.put("appClass", new JarFile(jar).getManifest().getMainAttributes().getValue("Main-Class"));
+            } catch (Exception e) {
+                map.put("appClass", "unknown");
+            }
         }
 
         map.put("jvmInputArguments", runtimeBean.getInputArguments() == null ? List.of() : new ArrayList<>(runtimeBean.getInputArguments()));

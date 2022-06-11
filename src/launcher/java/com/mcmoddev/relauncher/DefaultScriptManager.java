@@ -21,6 +21,7 @@
 package com.mcmoddev.relauncher;
 
 import static com.mcmoddev.relauncher.Main.findJavaBinary;
+import com.mcmoddev.relauncher.api.CustomScriptManager;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.ProcessInfo;
@@ -48,11 +49,10 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 
-public class DefaultJarUpdater implements JarUpdater {
-    public static final Logger LOGGER = LoggerFactory.getLogger("JarUpdater");
+public class DefaultScriptManager implements CustomScriptManager {
+    public static final Logger LOGGER = LoggerFactory.getLogger("ScriptManager");
 
-    private final Path jarPath;
-    private final UpdateChecker updateChecker;
+    private final List<String> script;
     private final List<String> javaArgs;
     private final Map<String, String> properties;
     private final LoggingWebhook loggingWebhook;
@@ -60,9 +60,8 @@ public class DefaultJarUpdater implements JarUpdater {
     @Nullable
     private ProcessInfo process;
 
-    public DefaultJarUpdater(@NonNull final Path jarPath, @NonNull final UpdateChecker updateChecker, @NonNull final List<String> javaArgs, String webhookUrl) {
-        this.jarPath = jarPath.toAbsolutePath();
-        this.updateChecker = updateChecker;
+    public DefaultScriptManager(@NonNull List<String> script, @NonNull final List<String> javaArgs, String webhookUrl) {
+        this.script = script;
         this.javaArgs = javaArgs;
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -71,9 +70,7 @@ public class DefaultJarUpdater implements JarUpdater {
             }
         }));
 
-        properties = Map.of(
-            Properties.JAR_PATH, jarPath.toString()
-        );
+        properties = Map.of();
 
         if (!webhookUrl.isBlank()) {
             // maybe use a regex?
@@ -84,46 +81,6 @@ public class DefaultJarUpdater implements JarUpdater {
         }
     }
 
-    @Override
-    public void run() {
-        LOGGER.info("Started update checking...");
-        try {
-            if (updateChecker.findNew()) {
-                final var release = updateChecker.getLatestFound();
-                if (release != null) {
-                    LOGGER.warn("Found new update to version \"{}\"!", release.name());
-                    killAndUpdate(release);
-                }
-            } else {
-                LOGGER.info("No updates were found.");
-            }
-        } catch (Exception e) {
-            LOGGER.error("Exception trying to update jar: ", e);
-        }
-    }
-
-    @Override
-    public void killAndUpdate(final Release release) throws Exception {
-        if (process != null) {
-            process.process().onExit().whenComplete(($, $$) -> {
-                if ($$ != null) {
-                    return;
-                }
-                try {
-                    update(release);
-                } catch (Exception e) {
-                    LOGGER.warn("Exception trying to update jar: ",e);
-                }
-                process = new ProcessInfoImpl(createProcess(), release);
-                LOGGER.warn("Old process was destroyed!");
-            });
-            process.process().destroy();
-        } else {
-            update(release);
-            process = new ProcessInfoImpl(createProcess(), release);
-        }
-    }
-
     private void setDiscordActivity(boolean processRunning) {
         final var integ = Main.getDiscordIntegration();
         if (integ != null) {
@@ -131,20 +88,9 @@ public class DefaultJarUpdater implements JarUpdater {
         }
     }
 
-    public void update(final Release release) throws Exception {
-        final var discordIntegration = Main.getDiscordIntegration();
-        if (discordIntegration != null) {
-            discordIntegration.setActivity(DiscordIntegration.ActivityType.PLAYING, "the updating game \uD83D\uDD04");
-        }
-
-        final var parent = jarPath.getParent();
-        if (parent != null) {
-            Files.createDirectories(parent);
-        }
-        Files.deleteIfExists(jarPath);
-        try (final var is = new BufferedInputStream(new URL(release.url()).openStream())) {
-            Files.copy(is, jarPath);
-        }
+    @Override
+    public List<String> getScript() {
+        return script;
     }
 
     private Process createProcess() {
@@ -172,10 +118,8 @@ public class DefaultJarUpdater implements JarUpdater {
 
     @Override
     public void tryFirstStart() {
-        if (Files.exists(jarPath)) {
-            process = new ProcessInfoImpl(Objects.requireNonNull(createProcess()), null);
-            LOGGER.warn("Started process after launcher start.");
-        }
+        process = new ProcessInfoImpl(Objects.requireNonNull(createProcess()));
+        LOGGER.warn("Started process after launcher start.");
     }
 
     private List<String> getStartCommand() {
@@ -185,14 +129,13 @@ public class DefaultJarUpdater implements JarUpdater {
         command.add("-javaagent:" + getAgentPath().toAbsolutePath() + "=" + Main.RMI_NAME + webhookUrl);
         command.addAll(javaArgs);
         properties.forEach((key, value) -> command.add("-D%s=\"%s\"".formatted(key, value)));
-        command.add("-jar");
-        command.add(jarPath.toString());
+        command.addAll(script);
         return command;
     }
 
     @Override
     public void startProcess() {
-        process = new ProcessInfoImpl(createProcess(), updateChecker.getLatestFound());
+        process = new ProcessInfoImpl(createProcess());
     }
 
     @Override
@@ -201,35 +144,13 @@ public class DefaultJarUpdater implements JarUpdater {
     }
 
     @Override
-    public UpdateChecker getUpdateChecker() {
-        return updateChecker;
-    }
-
-    @Override
     public @NotNull Path getAgentPath() {
         return Main.AGENT_PATH;
     }
 
     @Override
-    public Path getJarPath() {
-        return jarPath;
-    }
-
-    @Override
     public Optional<String> getProcessVersion() {
-        if (!Files.exists(jarPath)) {
-            if (process == null) {
-                return Optional.empty();
-            }
-            return Optional.ofNullable(process.release()).map(Release::name);
-        } else {
-            try {
-                final var jFile = new JarFile(jarPath.toFile());
-                return Optional.ofNullable(jFile.getManifest()).flatMap(m -> Optional.ofNullable(m.getMainAttributes().getValue("Implementation-Version")));
-            } catch (IOException e) {
-                return Optional.empty();
-            }
-        }
+        return Optional.empty();
     }
 
     @Override
@@ -240,11 +161,9 @@ public class DefaultJarUpdater implements JarUpdater {
 
     private class ProcessInfoImpl implements ProcessInfo {
         private final Process process;
-        @Nullable
-        private final Release release;
         private ProcessConnector connector;
 
-        public ProcessInfoImpl(final Process process, @Nullable final Release release) {
+        public ProcessInfoImpl(final Process process) {
             this.process = new DelegatedProcess(process) {
                 @Override
                 public void destroy() {
@@ -265,10 +184,9 @@ public class DefaultJarUpdater implements JarUpdater {
                     return super.destroyForcibly();
                 }
             };
-            this.release = release;
             process.onExit().whenComplete(($, e) -> {
                if (e != null) {
-                   DefaultJarUpdater.LOGGER.error("Exception exiting process: ", e);
+                   DefaultScriptManager.LOGGER.error("Exception exiting process: ", e);
                } else {
                    LOGGER.warn("Process exited successfully.");
                }
@@ -293,7 +211,7 @@ public class DefaultJarUpdater implements JarUpdater {
         @Override
         @Nullable
         public Release release() {
-            return release;
+            return null;
         }
 
         @Override

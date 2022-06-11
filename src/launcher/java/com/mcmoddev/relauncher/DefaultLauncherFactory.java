@@ -20,6 +20,8 @@
  */
 package com.mcmoddev.relauncher;
 
+import com.mcmoddev.relauncher.api.BaseProcessManager;
+import com.mcmoddev.relauncher.api.CustomScriptManager;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.LauncherFactory;
@@ -61,7 +63,15 @@ public class DefaultLauncherFactory implements LauncherFactory<Config> {
     }
 
     @Override
-    public @Nullable DiscordIntegration createDiscordIntegration(final Config config, final JarUpdater updater) {
+    public CustomScriptManager createScriptManager(final Config config) {
+        return new DefaultScriptManager(
+            config.customScript, config.jvmArgs,
+            config.discord.loggingWebhook
+        );
+    }
+
+    @Override
+    public @Nullable DiscordIntegration createDiscordIntegration(final Config config, final BaseProcessManager updater) {
         return new DefaultDiscordIntegration(Path.of(""), config.discord, () -> updater);
     }
 

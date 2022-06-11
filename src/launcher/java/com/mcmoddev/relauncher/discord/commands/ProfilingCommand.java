@@ -24,6 +24,7 @@ import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.Constants;
 import com.mcmoddev.relauncher.Main;
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -39,7 +40,7 @@ import java.util.function.Supplier;
 public class ProfilingCommand extends RLCommand {
     public static final Path DIRECTORY_PATH = Main.RELAUNCHER_DIR.resolve("profiling");
 
-    public ProfilingCommand(final Supplier<JarUpdater> jarUpdater, final Config.Discord config) {
+    public ProfilingCommand(final Supplier<BaseProcessManager> jarUpdater, final Config.Discord config) {
         super(jarUpdater, config);
         name = "profiling";
         help = "Profiling related commands.";
@@ -50,8 +51,8 @@ public class ProfilingCommand extends RLCommand {
     }
 
     @Override
-    protected void execute(final SlashCommandEvent event) {
-        final var updater = jarUpdater.get();
+    protected void exec(final SlashCommandEvent event) {
+        final var updater = processManager.get();
         final var process = updater.getProcess();
         final var connector = process == null ? null : process.connector();
         if (connector == null) {

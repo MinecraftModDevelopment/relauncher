@@ -23,27 +23,28 @@ package com.mcmoddev.relauncher.discord.commands;
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.DefaultJarUpdater;
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.JarUpdater;
 
 import java.nio.file.Files;
 import java.util.function.Supplier;
 
 public class StartCommand extends RLCommand {
-    public StartCommand(final Supplier<JarUpdater> jarUpdater, final Config.Discord config) {
+    public StartCommand(final Supplier<BaseProcessManager> jarUpdater, final Config.Discord config) {
         super(jarUpdater, config);
         name = "start";
         help = "Starts the process.";
     }
 
     @Override
-    protected void execute(final SlashCommandEvent event) {
-        final var updater = jarUpdater.get();
+    protected void exec(final SlashCommandEvent event) {
+        final var updater = processManager.get();
         final var process = updater.getProcess();
         if (process != null) {
             event.deferReply().setContent("A process is running already! Use `/shutdown` to stop it.").queue();
             return;
         }
-        if (!Files.exists(updater.getJarPath())) {
+        if (updater instanceof JarUpdater jar && !Files.exists(jar.getJarPath())) {
             event.deferReply().setContent("Cannot start the process due its jar file missing. Use `/update` to update to a version.").queue();
             return;
         }

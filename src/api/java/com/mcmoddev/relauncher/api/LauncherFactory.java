@@ -24,12 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.Path;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * A factory for ReLauncher. <br>
@@ -69,16 +64,20 @@ public interface LauncherFactory<T extends LauncherConfig> {
     @NotNull
     JarUpdater createUpdater(T config);
 
+    default CustomScriptManager createScriptManager(T config) {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Creates a {@link DiscordIntegration}. <br>
      * The launcher only calls this method if Discord Integration is enabled in the config.
      *
      * @param config  the launcher config
-     * @param updater the {@link JarUpdater jar updater}
+     * @param updater the {@link BaseProcessManager process manager}
      * @return the integration instance. Can be {@code null}.
      */
     @Nullable
-    DiscordIntegration createDiscordIntegration(T config, JarUpdater updater);
+    DiscordIntegration createDiscordIntegration(T config, BaseProcessManager manager);
 
     /**
      * @return the GitHub repository of the launcher

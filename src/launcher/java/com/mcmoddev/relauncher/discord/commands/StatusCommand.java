@@ -23,6 +23,7 @@ package com.mcmoddev.relauncher.discord.commands;
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.Main;
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.connector.ThreadInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -48,23 +49,23 @@ public class StatusCommand extends RLCommand implements EventListener {
 
     public static final String BUTTON_NAME = "thread_dump";
 
-    public StatusCommand(final Supplier<JarUpdater> jarUpdater, final Config.Discord config) {
+    public StatusCommand(final Supplier<BaseProcessManager> jarUpdater, final Config.Discord config) {
         super(jarUpdater, config);
         name = "status";
         help = "Gets information about the process status.";
     }
 
     @Override
-    protected void execute(final SlashCommandEvent event) {
-        final var updater = jarUpdater.get();
+    protected void exec(final SlashCommandEvent event) {
+        final var updater = processManager.get();
         final var process = updater.getProcess();
-        final var version = updater.getJarVersion();
+        final var version = updater.getProcessVersion();
         if (process == null) {
             event.deferReply().addEmbeds(
                 new EmbedBuilder()
                     .setColor(Color.RED)
                     .setTitle("Process is not running")
-                    .addField("Jar Version", version.orElse("Unknown"), true)
+                    .addField("Process Version", version.orElse("Unknown"), true)
                     .addField("Launcher Version", Main.VERSION, true)
                     .setTimestamp(Instant.now())
                     .build()
@@ -108,7 +109,7 @@ public class StatusCommand extends RLCommand implements EventListener {
             event.deferEdit().queue();
             return;
         }
-        final var process = jarUpdater.get().getProcess();
+        final var process = processManager.get().getProcess();
         if (process == null) {
             event.deferReply(true).setContent("The process is not running.").queue();
             return;

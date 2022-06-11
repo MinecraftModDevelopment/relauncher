@@ -23,6 +23,7 @@ package com.mcmoddev.relauncher.discord.commands;
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.Main;
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.Release;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -36,7 +37,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class UpdateCommand extends RLCommand {
-    public UpdateCommand(final Supplier<JarUpdater> jarUpdater, final Config.Discord config) {
+    public UpdateCommand(final Supplier<BaseProcessManager> jarUpdater, final Config.Discord config) {
         super(jarUpdater, config);
         name = "update";
         help = "Updates the process' jar.";
@@ -47,8 +48,8 @@ public class UpdateCommand extends RLCommand {
     }
 
     @Override
-    protected void execute(final SlashCommandEvent event) {
-        final var jarUpdater = this.jarUpdater.get();
+    protected void exec(final SlashCommandEvent event) {
+        final var manager = this.processManager.get();
         final var selfUpdate = event.getOption("self-update", false, OptionMapping::getAsBoolean);
         final var tagOption = event.getOption("tag");
         if (selfUpdate && tagOption == null) {
@@ -57,6 +58,10 @@ public class UpdateCommand extends RLCommand {
         }
         if (selfUpdate) {
             selfUpdate(tagOption.getAsString(), event);
+            return;
+        }
+        if (!(manager instanceof JarUpdater jarUpdater)) {
+            event.deferReply(true).setContent("The launcher is running in a mode that doesn't support updating!");
             return;
         }
         if (tagOption == null) {

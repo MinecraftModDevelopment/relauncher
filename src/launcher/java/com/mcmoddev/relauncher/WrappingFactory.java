@@ -20,6 +20,7 @@
  */
 package com.mcmoddev.relauncher;
 
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.LauncherConfig;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
 
+@SuppressWarnings("unchecked")
 record WrappingFactory<T extends LauncherConfig>(LauncherFactory<T> delegate) implements LauncherFactory<T> {
 
     @Override
@@ -48,11 +50,11 @@ record WrappingFactory<T extends LauncherConfig>(LauncherFactory<T> delegate) im
     }
 
     @Override
-    public @Nullable DiscordIntegration createDiscordIntegration(final T config, final JarUpdater updater) {
+    public @Nullable DiscordIntegration createDiscordIntegration(final T config, final BaseProcessManager updater) {
         return delegate.createDiscordIntegration(config, updater);
     }
 
-    public @Nullable DiscordIntegration createDiscordIntegration(final Object config, final JarUpdater updater) {
+    public @Nullable DiscordIntegration createDiscordIntegration(final Object config, final BaseProcessManager updater) {
         return delegate.createDiscordIntegration((T) config, updater);
     }
 
@@ -65,4 +67,5 @@ record WrappingFactory<T extends LauncherConfig>(LauncherFactory<T> delegate) im
     public @Nullable String getSelfUpdateUrl(final String tagName) throws IOException, InterruptedException {
         return delegate.getSelfUpdateUrl(tagName);
     }
+
 }

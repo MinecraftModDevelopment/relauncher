@@ -58,5 +58,26 @@ public interface LauncherConfig {
         return true;
     }
 
+    /**
+     * @return gets the mode the launcher will run in
+     */
+    default LauncherMode getLauncherMode() {
+        return LauncherMode.JAR;
+    }
+
     record CheckingRate(long amount, TimeUnit unit) {}
+
+    enum LauncherMode {
+        /**
+         * The jar mode means that the launcher will manage a one-jar process. <br>
+         * This option supports updating.
+         */
+        JAR,
+        /**
+         * The custom script mode means that the launcher will manage a custom java script. <br.
+         * Useful for Minecraft servers. <br>
+         * This option doesn't currently support updating.
+         */
+        CUSTOM_SCRIPT
+    }
 }

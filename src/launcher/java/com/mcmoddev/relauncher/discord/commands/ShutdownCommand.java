@@ -23,20 +23,21 @@ package com.mcmoddev.relauncher.discord.commands;
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.DefaultJarUpdater;
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.JarUpdater;
 
 import java.util.function.Supplier;
 
 public class ShutdownCommand extends RLCommand {
-    public ShutdownCommand(final Supplier<JarUpdater> jarUpdater, final Config.Discord config) {
+    public ShutdownCommand(final Supplier<BaseProcessManager> jarUpdater, final Config.Discord config) {
         super(jarUpdater, config);
         name = "shutdown";
         help = "Shuts down the process.";
     }
 
     @Override
-    protected void execute(final SlashCommandEvent event) {
-        final var updater = jarUpdater.get();
+    protected void exec(final SlashCommandEvent event) {
+        final var updater = processManager.get();
         final var process = updater.getProcess();
         if (process == null) {
             event.deferReply().setContent("No process is running! Use `/start` to start it.").queue();

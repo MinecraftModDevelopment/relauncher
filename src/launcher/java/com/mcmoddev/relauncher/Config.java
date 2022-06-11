@@ -41,13 +41,20 @@ public class Config implements LauncherConfig {
     public static final Config DEFAULT = new Config();
 
     @Required
+    @Setting("mode")
+    @Comment("""
+        The mode this launcher runs in:
+        - JAR => manages a jar, supports updating
+        - CUSTOM_SCRIPT => manages a custom java launch script, does NOT support updating""")
+    public LauncherMode mode = LauncherMode.JAR;
+
     @Setting("jar_path")
-    @Comment("The path of the jar to launch.")
+    @Comment("Only if the mode is JAR, the path of the jar to launch.")
     public String jarPath = "file.jar";
 
     @Required
     @Setting("jvm_args")
-    @Comment("The arguments to start the jar with.")
+    @Comment("The arguments to start the process with.")
     public List<String> jvmArgs = new ArrayList<>();
 
     @Required
@@ -59,6 +66,12 @@ public class Config implements LauncherConfig {
     @Setting("github")
     @Comment("Information about the github repo for update checking.")
     public GitHub gitHub = new GitHub();
+
+    @Setting("custom_script")
+    @Comment("""
+        Only if the mode is CUSTOM_SCRIPT, the arguments of the script to run.
+        Example for running a Minecraft server: ["@user_jvm_args.txt", "@libraries/net/minecraftforge/forge/1.19-41.0.17/unix_args.txt"]""")
+    public List<String> customScript = List.of();
 
     @ConfigSerializable
     public static final class GitHub {

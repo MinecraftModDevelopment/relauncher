@@ -20,13 +20,12 @@
  */
 package com.mcmoddev.relauncher;
 
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.LauncherConfig;
 import com.mcmoddev.relauncher.api.LauncherFactory;
 import com.mcmoddev.relauncher.api.connector.ProcessConnector;
-import net.dv8tion.jda.api.utils.AllowedMentions;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.DosFileAttributeView;
-import java.nio.file.attribute.DosFileAttributes;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -102,7 +100,7 @@ public final class Main {
     });
 
     private static LauncherConfig config;
-    private static JarUpdater updater;
+    private static BaseProcessManager manager;
     private static DiscordIntegration discordIntegration;
 
     public static void main(String[] args) throws IOException {
@@ -117,17 +115,20 @@ public final class Main {
             throw new RuntimeException("A new configuration file was created! Please configure it.");
         }
 
-        updater = FACTORY.createUpdater(config);
+        manager = switch (config.getLauncherMode()) {
+            case JAR -> FACTORY.createUpdater(config);
+            case CUSTOM_SCRIPT -> FACTORY.createScriptManager(config);
+        };
 
         try {
-            copyAgent(updater);
+            copyAgent(manager);
         } catch (IOException e) {
             LOG.error("Exception copying agent JAR: ", e);
             throw new RuntimeException(e);
         }
 
         if (config.isDiscordIntegrationEnabled()) {
-            discordIntegration = FACTORY.createDiscordIntegration(config, updater);
+            discordIntegration = FACTORY.createDiscordIntegration(config, manager);
             if (discordIntegration != null) {
                 LOG.warn("Discord integration is active!");
                 SERVICE.setMaximumPoolSize(2);
@@ -136,11 +137,11 @@ public final class Main {
 
         final var checkingRate = config.getCheckingRate();
 
-        if (checkingRate.amount() > -1) {
+        if (manager instanceof JarUpdater updater && checkingRate.amount() > -1) {
             SERVICE.scheduleAtFixedRate(updater, 0, checkingRate.amount(), checkingRate.unit());
             LOG.warn("Scheduled updater. Will run every {} minutes.", checkingRate);
         } else {
-            updater.tryFirstStart();
+            manager.tryFirstStart();
             SERVICE.allowCoreThreadTimeOut(true);
         }
 
@@ -156,9 +157,9 @@ public final class Main {
         return discordIntegration;
     }
 
-    public static void copyAgent(JarUpdater updater) throws IOException {
-        final var agentPath = updater.getAgentPath();
-        Files.copy(updater.getAgentResource(), agentPath, StandardCopyOption.REPLACE_EXISTING);
+    public static void copyAgent(BaseProcessManager manager) throws IOException {
+        final var agentPath = manager.getAgentPath();
+        Files.copy(manager.getAgentResource(), agentPath, StandardCopyOption.REPLACE_EXISTING);
         if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win")) {
             final var atView = Files.getFileAttributeView(agentPath, DosFileAttributeView.class);
             atView.setHidden(true);
@@ -207,7 +208,7 @@ public final class Main {
             atView.setHidden(true);
         }
 
-        final var process = updater.getProcess();
+        final var process = manager.getProcess();
         if (process != null) {
             process.process().destroy();
         }

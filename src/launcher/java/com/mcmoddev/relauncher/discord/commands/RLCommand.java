@@ -23,22 +23,32 @@ package com.mcmoddev.relauncher.discord.commands;
 import com.jagrosh.jdautilities.command.SlashCommand;
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
-import com.mcmoddev.relauncher.api.JarUpdater;
+import com.mcmoddev.relauncher.api.BaseProcessManager;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 public abstract class RLCommand extends SlashCommand {
 
-    protected final Supplier<JarUpdater> jarUpdater;
+    protected final Supplier<BaseProcessManager> processManager;
+    protected final List<String> roles;
 
-    protected RLCommand(final Supplier<JarUpdater> jarUpdater, final Config.Discord config) {
-        this.jarUpdater = jarUpdater;
-        this.enabledRoles = config.roles.toArray(String[]::new);
+    protected RLCommand(final Supplier<BaseProcessManager> processManager, final Config.Discord config) {
+        this.processManager = processManager;
+        this.roles = config.roles;
         guildOnly = true;
-        defaultEnabled = false;
     }
 
     @Override
-    protected void execute(final SlashCommandEvent event) {
+    protected final void execute(final SlashCommandEvent event) {
+        if (event.getMember() != null || event.getMember().getRoles().stream().noneMatch(role -> roles.contains(role.getId()))) {
+            event.deferReply(true).setContent("You do not have the required permissions to run this command.").queue();
+            return;
+        }
+        exec(event);
+    }
+
+    protected void exec(final SlashCommandEvent event) {
+
     }
 }
