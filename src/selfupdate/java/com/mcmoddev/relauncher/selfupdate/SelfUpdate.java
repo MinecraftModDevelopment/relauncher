@@ -112,6 +112,7 @@ public class SelfUpdate {
             cmd = List.of(path.toString());
         } else {
             scriptFull = scriptFull.formatted(script);
+            scriptFull = "#!/usr/bin/env sh\n" + scriptFull;
             cmd = List.of("sh", path.toString());
         }
         Files.copy(new ByteArrayInputStream(scriptFull.getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
