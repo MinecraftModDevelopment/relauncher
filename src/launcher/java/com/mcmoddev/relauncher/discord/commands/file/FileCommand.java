@@ -126,7 +126,7 @@ public class FileCommand extends RLCommand {
         event.deferReply()
             .queue(hook -> {
                 if (attach != null) {
-                    attach.downloadToFile(file.toAbsolutePath().toString())
+                    attach.getProxy().downloadToFile(file.toFile())
                         .whenComplete(($, e) -> {
                             if (e == null) {
                                 hook.editOriginal("File downloaded successfully.").queue();
