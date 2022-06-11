@@ -32,6 +32,7 @@ public abstract class RLCommand extends SlashCommand {
 
     protected final Supplier<BaseProcessManager> processManager;
     protected final List<String> roles;
+    protected boolean isRestricted = true;
 
     protected RLCommand(final Supplier<BaseProcessManager> processManager, final Config.Discord config) {
         this.processManager = processManager;
@@ -41,7 +42,7 @@ public abstract class RLCommand extends SlashCommand {
 
     @Override
     protected final void execute(final SlashCommandEvent event) {
-        if (event.getMember() != null || event.getMember().getRoles().stream().noneMatch(role -> roles.contains(role.getId()))) {
+        if (isRestricted && (event.getMember() == null || event.getMember().getRoles().stream().noneMatch(role -> roles.contains(role.getId())))) {
             event.deferReply(true).setContent("You do not have the required permissions to run this command.").queue();
             return;
         }

@@ -53,6 +53,7 @@ public class StatusCommand extends RLCommand implements EventListener {
         super(jarUpdater, config);
         name = "status";
         help = "Gets information about the process status.";
+        isRestricted = false;
     }
 
     @Override
@@ -74,7 +75,7 @@ public class StatusCommand extends RLCommand implements EventListener {
             final var embed = new EmbedBuilder()
                 .setColor(Color.GREEN)
                 .setTitle("Process is running.")
-                .addField("Jar Version", version.orElse("Unknown"), true)
+                .addField("Process Version", version.orElse("Unknown"), true)
                 .addField("Launcher Version", Main.VERSION, true)
                 .addField("Running Since", process.process().info().startInstant().map(TimeFormat.RELATIVE::format).orElse("Unknown startup time"), true)
                 .setTimestamp(Instant.now());
@@ -178,8 +179,9 @@ public class StatusCommand extends RLCommand implements EventListener {
     }
 
     public boolean isEnabled(final String roleId) {
-        for (var r : enabledRoles) {
-            if (r.equals(roleId)) return true;
+        for (var r : roles) {
+            if (r.equals(roleId))
+                return true;
         }
         return false;
     }
