@@ -25,11 +25,11 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.LayoutBase;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.slf4j.helpers.MessageFormatter;
 
 import javax.annotation.Nullable;
@@ -216,8 +216,8 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
                     name = ((Role) obj).getName();
                 } else if (obj instanceof GuildChannel) {
                     name = ((GuildChannel) obj).getName();
-                } else if (obj instanceof Emote) {
-                    name = ((Emote) obj).getName();
+                } else if (obj instanceof Emoji emoji) {
+                    name = emoji.getName();
                 }
                 if (name != null) {
                     return String.format("%s (%s;`%s`)", ((IMentionable) obj).getAsMention(), name, ((IMentionable)
