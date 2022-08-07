@@ -82,7 +82,6 @@ public class FileCommand extends RLCommand {
                 public void init() {
                     name = "get";
                     help = "Gets a file.";
-                    enabledRoles = enabledRoles();
                     options = List.of(
                         new OptionData(OptionType.STRING, "path", "The path of the file to get.", true),
                         new OptionData(OptionType.BOOLEAN, "zip", "If true, the provided directory at the path, will be zipped and sent.")
@@ -96,7 +95,6 @@ public class FileCommand extends RLCommand {
                 public void init() {
                     name = "upload";
                     help = "Uploads a file.";
-                    enabledRoles = enabledRoles();
                     options = List.of(
                         new OptionData(OptionType.STRING, "path", "The path to upload the file to.", true),
                         new OptionData(OptionType.ATTACHMENT, "file", "The file to upload. Mutually exclusive with 'url'"),
@@ -108,6 +106,10 @@ public class FileCommand extends RLCommand {
     }
 
     protected void onFileUpload(final SlashCommandEvent event) {
+        if (event.getMember() == null || event.getMember().getRoles().stream().noneMatch(role -> roles.contains(role.getId()))) {
+            event.deferReply(true).setContent("You do not have the required permissions to run this command.").queue();
+            return;
+        }
         final var file = basePath.resolve(event.getOption("path", "", OptionMapping::getAsString));
         if (!canAccessFile(file)) {
             event.deferReply(true).setContent("You do not have access to the specified path.").queue();
@@ -161,6 +163,10 @@ public class FileCommand extends RLCommand {
     }
 
     protected void onFileGet(final SlashCommandEvent event) {
+        if (event.getMember() == null || event.getMember().getRoles().stream().noneMatch(role -> roles.contains(role.getId()))) {
+            event.deferReply(true).setContent("You do not have the required permissions to run this command.").queue();
+            return;
+        }
         final var doZip = event.getOption("zip", false, OptionMapping::getAsBoolean);
         if (doZip) {
             final var dir = basePath.resolve(event.getOption("path", "", OptionMapping::getAsString));
@@ -227,10 +233,6 @@ public class FileCommand extends RLCommand {
         });
         zipOut.close();
         return bo.toByteArray();
-    }
-
-    protected String[] enabledRoles() {
-        return enabledRoles;
     }
 
     /**
