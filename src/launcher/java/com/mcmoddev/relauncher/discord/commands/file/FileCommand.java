@@ -28,6 +28,8 @@ import com.mcmoddev.relauncher.discord.commands.RLCommand;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.AttachedFile;
+import net.dv8tion.jda.api.utils.FileUpload;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
@@ -174,7 +176,7 @@ public class FileCommand extends RLCommand {
                 .flatMap(hook -> {
                     try {
                         final var data = filesZip(dir);
-                        return hook.editOriginal(data, "dir.zip");
+                        return hook.editOriginalAttachments(AttachedFile.fromData(data, "dir.zip"));
                     } catch (IOException e) {
                         Main.LOG.error("Exception trying to zip directory '{}': ", dir, e);
                         return hook.editOriginal("Exception trying to zip directory: " + e.getLocalizedMessage());
@@ -198,7 +200,7 @@ public class FileCommand extends RLCommand {
             return;
         }
         event.deferReply()
-            .flatMap(hook -> hook.editOriginal(file.toFile()))
+            .flatMap(hook -> hook.editOriginalAttachments(FileUpload.fromData(file.toFile())))
             .queue();
     }
 

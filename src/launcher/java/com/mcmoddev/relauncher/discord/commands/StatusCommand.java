@@ -31,6 +31,7 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.jetbrains.annotations.NotNull;
 
@@ -125,7 +126,7 @@ public class StatusCommand extends RLCommand implements EventListener {
                 }
                 try (final var writer = Files.newBufferedWriter(dumpPath, StandardOpenOption.CREATE)) {
                     writer.write(getThreadDump(threads));
-                    event.deferReply().addFile(dumpPath.toFile(), "dump.md").queue();
+                    event.deferReply().addFiles(FileUpload.fromData(dumpPath.toFile(), "dump.md")).queue();
                 }
             } catch (Exception e) {
                 event.deferReply(true).setContent("Could not retrieve process threads!").queue();

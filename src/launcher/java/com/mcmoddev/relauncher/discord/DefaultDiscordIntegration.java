@@ -36,6 +36,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 
 import javax.security.auth.login.LoginException;
 import java.nio.file.Path;
@@ -74,7 +75,7 @@ public final class DefaultDiscordIntegration implements DiscordIntegration {
                 .setGatewayPool(Main.SERVICE)
                 .build()
                 .setRequiredScopes("applications.commands", "bot");
-        } catch (LoginException e) {
+        } catch (InvalidTokenException e) {
             throw new RuntimeException("Please provide a valid bot token!");
         }
 

@@ -29,6 +29,7 @@ import com.mcmoddev.relauncher.api.JarUpdater;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.AttachedFile;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,7 +72,7 @@ public class ProfilingCommand extends RLCommand {
                             final var file = DIRECTORY_PATH.resolve(Instant.now().getEpochSecond() + ".json");
                             try (final var writer = Files.newBufferedWriter(file, StandardOpenOption.CREATE)) {
                                 Constants.GSON.toJson(result, writer);
-                                yield hook.editOriginal(file.toFile(), "profiling.json");
+                                yield hook.editOriginalAttachments(AttachedFile.fromData(file.toFile(), "profiling.json"));
                             }
                         }
                         default -> hook.editOriginal("Invalid type provided!");
