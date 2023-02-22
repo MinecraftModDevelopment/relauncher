@@ -129,7 +129,7 @@ tasks.configureEach {
 tasks.register('agentJar', Jar).configure {
     from sourceSets.api.output
     from sourceSets.agent.output
-    classifier 'agent'
+    archiveClassifier.set 'agent'
     group 'build'
     description 'Builds the agent JAR'
 
@@ -164,7 +164,7 @@ tasks.register('copyAgentJar', Copy) {
 
 tasks.register('selfUpdateJar', Jar).configure {
     from sourceSets.selfupdate.output
-    classifier 'selfupdate'
+    archiveClassifier.set 'selfupdate'
     group 'build'
     description 'Builds the selfupdate JAR'
     manifest.attributes(makeManifestAttributes('Main-Class', 'com.mcmoddev.relauncher.selfupdate.SelfUpdate'))
@@ -195,7 +195,7 @@ tasks.named('shadowJar', ShadowJar).configure {
             project.configurations.shade,
             project.configurations.logback
     ]
-    classifier 'all'
+    archiveClassifier.set 'all'
     group 'build'
     description 'Builds the whole project with its dependencies.'
 }
@@ -219,7 +219,7 @@ tasks.named(JavaPlugin.JAR_TASK_NAME, Jar).configure {
 tasks.register('apiJar', Jar).configure {
     from sourceSets.api.output
     manifest.attributes(makeManifestAttributes("", ""))
-    classifier 'api'
+    archiveClassifier.set 'api'
     description 'Builds the api jar.'
     dependsOn tasks.named('updateLicenses')
     group 'build'
@@ -229,7 +229,7 @@ tasks.register('sourcesJar', Jar).configure {
     dependsOn 'launcherClasses'
     from sourceSets.api.allSource
     from sourceSets.launcher.allSource
-    classifier 'sources'
+    archiveClassifier.set 'sources'
     group 'build'
     description 'Builds the sources jar'
 }
@@ -237,7 +237,7 @@ tasks.register('sourcesJar', Jar).configure {
 tasks.register('apiSourcesJar', Jar).configure {
     dependsOn 'apiClasses'
     from sourceSets.api.allSource
-    classifier 'api-sources'
+    archiveClassifier.set 'api-sources'
     group 'build'
     description 'Builds the api sources jar'
 }
