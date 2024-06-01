@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,6 @@
  */
 package com.mcmoddev.relauncher;
 
-import static com.mcmoddev.relauncher.Main.findJavaBinary;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
 import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.ProcessInfo;
@@ -48,6 +47,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 
+import static com.mcmoddev.relauncher.Main.findJavaBinary;
+
 public class DefaultJarUpdater implements JarUpdater {
     public static final Logger LOGGER = LoggerFactory.getLogger("JarUpdater");
 
@@ -72,7 +73,7 @@ public class DefaultJarUpdater implements JarUpdater {
         }));
 
         properties = Map.of(
-            Properties.JAR_PATH, jarPath.toString()
+                Properties.JAR_PATH, jarPath.toString()
         );
 
         if (!webhookUrl.isBlank()) {
@@ -112,7 +113,7 @@ public class DefaultJarUpdater implements JarUpdater {
                 try {
                     update(release);
                 } catch (Exception e) {
-                    LOGGER.warn("Exception trying to update jar: ",e);
+                    LOGGER.warn("Exception trying to update jar: ", e);
                 }
                 process = new ProcessInfoImpl(createProcess(), release);
                 LOGGER.warn("Old process was destroyed!");
@@ -161,8 +162,8 @@ public class DefaultJarUpdater implements JarUpdater {
             LOGGER.info("Starting process...");
             setDiscordActivity(true);
             return new ProcessBuilder(getStartCommand())
-                .inheritIO()
-                .start();
+                    .inheritIO()
+                    .start();
         } catch (IOException e) {
             LOGGER.error("Starting process failed, used start command {}", getStartCommand(), e);
         }
@@ -267,11 +268,11 @@ public class DefaultJarUpdater implements JarUpdater {
             };
             this.release = release;
             process.onExit().whenComplete(($, e) -> {
-               if (e != null) {
-                   DefaultJarUpdater.LOGGER.error("Exception exiting process: ", e);
-               } else {
-                   LOGGER.warn("Process exited successfully.");
-               }
+                if (e != null) {
+                    DefaultJarUpdater.LOGGER.error("Exception exiting process: ", e);
+                } else {
+                    LOGGER.warn("Process exited successfully.");
+                }
             });
 
             Main.SERVICE.schedule(() -> {
@@ -303,6 +304,7 @@ public class DefaultJarUpdater implements JarUpdater {
         }
     }
 
-    record LoggingWebhook(String id, String token) {}
+    record LoggingWebhook(String id, String token) {
+    }
 
 }

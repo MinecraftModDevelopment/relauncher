@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +20,9 @@
  */
 package com.mcmoddev.relauncher.github;
 
-import com.mcmoddev.relauncher.api.UpdateChecker;
 import com.mcmoddev.relauncher.Constants;
 import com.mcmoddev.relauncher.api.Release;
+import com.mcmoddev.relauncher.api.UpdateChecker;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
@@ -54,24 +54,24 @@ public class GithubUpdateChecker implements UpdateChecker {
 
     @Override
     public boolean findNew() throws IOException, InterruptedException {
-       final var old = latestFound;
-       final var newRel = resolveLatestReleaseAsGithub();
+        final var old = latestFound;
+        final var newRel = resolveLatestReleaseAsGithub();
         if (newRel == null) {
             return false;
         }
-       if (old == null) {
-           return true;
-       }
-       return newRel.id > old.id;
+        if (old == null) {
+            return true;
+        }
+        return newRel.id > old.id;
     }
 
     @Nullable
     public GithubRelease resolveLatestReleaseAsGithub() throws IOException, InterruptedException {
         final var uri = URI.create(REQUEST_URL.formatted(owner, repo));
         final var request = HttpRequest.newBuilder(uri)
-            .GET()
-            .header("accept", "application/vnd.github.v3+json")
-            .build();
+                .GET()
+                .header("accept", "application/vnd.github.v3+json")
+                .build();
 
         final var res = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         return latestFound = Constants.GSON.fromJson(res.body(), GithubRelease.class);
@@ -97,9 +97,9 @@ public class GithubUpdateChecker implements UpdateChecker {
     public GithubRelease getGhReleaseByTagName(final String tag) throws InterruptedException, IOException {
         final var uri = URI.create("https://api.github.com/repos/%s/%s/releases/tags/%s".formatted(owner, repo, tag));
         final var request = HttpRequest.newBuilder(uri)
-            .GET()
-            .header("accept", "application/vnd.github.v3+json")
-            .build();
+                .GET()
+                .header("accept", "application/vnd.github.v3+json")
+                .build();
 
         final var res = getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         if (res.statusCode() == 404) {
@@ -116,11 +116,11 @@ public class GithubUpdateChecker implements UpdateChecker {
     public Release resolveReleaseFromGh(@Nullable GithubRelease release) {
         if (release == null) return null;
         return release.assets.stream()
-            .filter(asst -> asst.name.endsWith(".jar"))
-            .filter(p -> jarNamePattern.matcher(p.name).find())
-            .findFirst()
-            .map(a -> new Release(release.name, a.browserDownloadUrl))
-            .orElse(null);
+                .filter(asst -> asst.name.endsWith(".jar"))
+                .filter(p -> jarNamePattern.matcher(p.name).find())
+                .findFirst()
+                .map(a -> new Release(release.name, a.browserDownloadUrl))
+                .orElse(null);
     }
 
     public HttpClient getHttpClient() {

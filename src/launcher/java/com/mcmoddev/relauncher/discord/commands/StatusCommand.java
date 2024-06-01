@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@ import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.Main;
 import com.mcmoddev.relauncher.api.BaseProcessManager;
-import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.connector.ThreadInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -35,7 +34,7 @@ import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Color;
+import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.rmi.RemoteException;
@@ -64,22 +63,22 @@ public class StatusCommand extends RLCommand implements EventListener {
         final var version = updater.getProcessVersion();
         if (process == null) {
             event.deferReply().addEmbeds(
-                new EmbedBuilder()
-                    .setColor(Color.RED)
-                    .setTitle("Process is not running")
-                    .addField("Process Version", version.orElse("Unknown"), true)
-                    .addField("Launcher Version", Main.VERSION, true)
-                    .setTimestamp(Instant.now())
-                    .build()
+                    new EmbedBuilder()
+                            .setColor(Color.RED)
+                            .setTitle("Process is not running")
+                            .addField("Process Version", version.orElse("Unknown"), true)
+                            .addField("Launcher Version", Main.VERSION, true)
+                            .setTimestamp(Instant.now())
+                            .build()
             ).queue();
         } else {
             final var embed = new EmbedBuilder()
-                .setColor(Color.GREEN)
-                .setTitle("Process is running.")
-                .addField("Process Version", version.orElse("Unknown"), true)
-                .addField("Launcher Version", Main.VERSION, true)
-                .addField("Running Since", process.process().info().startInstant().map(TimeFormat.RELATIVE::format).orElse("Unknown startup time"), true)
-                .setTimestamp(Instant.now());
+                    .setColor(Color.GREEN)
+                    .setTitle("Process is running.")
+                    .addField("Process Version", version.orElse("Unknown"), true)
+                    .addField("Launcher Version", Main.VERSION, true)
+                    .addField("Running Since", process.process().info().startInstant().map(TimeFormat.RELATIVE::format).orElse("Unknown startup time"), true)
+                    .setTimestamp(Instant.now());
 
             final var connector = process.connector();
             if (connector != null) {
@@ -89,13 +88,14 @@ public class StatusCommand extends RLCommand implements EventListener {
                     embed.addField("Memory Usage", bytesToFriendly(memoryUsed / 1024) + "/" + bytesToFriendly(mem.totalMemory() / 1024), true);
 
                     embed.addField("CPU Load", connector.getCPULoad() * 100 + "%", true);
-                } catch (RemoteException ignored) {}
+                } catch (RemoteException ignored) {
+                }
             }
 
             event.deferReply()
-                .addEmbeds(embed.build())
-                .addActionRow(Button.primary(BUTTON_NAME, "\uD83D\uDCF7 Thread Dump"))
-                .queue();
+                    .addEmbeds(embed.build())
+                    .addActionRow(Button.primary(BUTTON_NAME, "\uD83D\uDCF7 Thread Dump"))
+                    .queue();
         }
     }
 
@@ -140,32 +140,32 @@ public class StatusCommand extends RLCommand implements EventListener {
     public String getThreadDump(ThreadInfo[] threads) {
         final var builder = new StringBuilder();
         builder.append("# Thread dump at ")
-            .append(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
-            .append(System.lineSeparator())
-            .append(System.lineSeparator());
+                .append(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
+                .append(System.lineSeparator())
+                .append(System.lineSeparator());
         builder.append("## All active threads:");
         for (final var info : threads) {
             builder
-                .append(System.lineSeparator())
-                .append("- ")
-                .append(info.name())
-                .append(info.group() == null ? "" : "[" + info.group().name() + "]")
-                .append('@')
-                .append(info.id());
+                    .append(System.lineSeparator())
+                    .append("- ")
+                    .append(info.name())
+                    .append(info.group() == null ? "" : "[" + info.group().name() + "]")
+                    .append('@')
+                    .append(info.id());
         }
         builder.append(System.lineSeparator())
-            .append(System.lineSeparator())
-            .append("## Detailed information about each thread:")
-            .append(System.lineSeparator());
+                .append(System.lineSeparator())
+                .append("## Detailed information about each thread:")
+                .append(System.lineSeparator());
         for (final var thread : threads) {
             builder.append(System.lineSeparator());
             builder.append("- ");
             builder.append(buildThreadInfo(thread));
             for (final var stack : thread.stackElements()) {
                 builder.append(System.lineSeparator())
-                    .append("    ")
-                    .append("at ")
-                    .append(stack.toString());
+                        .append("    ")
+                        .append("at ")
+                        .append(stack.toString());
             }
         }
         return builder.toString();
@@ -173,9 +173,9 @@ public class StatusCommand extends RLCommand implements EventListener {
 
     public String buildThreadInfo(final ThreadInfo thread) {
         return "\"%s@%s\" %sprio=%s %s".formatted(
-            thread.group() == null ? thread.name() : thread.name() + " [" + thread.group().name() + "]",
-            thread.id(),
-            thread.daemon() ? "daemon " : "", thread.priority(), thread.state().toString().toLowerCase(Locale.ROOT)
+                thread.group() == null ? thread.name() : thread.name() + " [" + thread.group().name() + "]",
+                thread.id(),
+                thread.daemon() ? "daemon " : "", thread.priority(), thread.state().toString().toLowerCase(Locale.ROOT)
         );
     }
 

@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -49,9 +49,9 @@ public class Config implements LauncherConfig {
     @Required
     @Setting("mode")
     @Comment("""
-        The mode this launcher runs in:
-        - JAR => manages a jar, supports updating
-        - CUSTOM_SCRIPT => manages a custom java launch script, does NOT support updating""")
+            The mode this launcher runs in:
+            - JAR => manages a jar, supports updating
+            - CUSTOM_SCRIPT => manages a custom java launch script, does NOT support updating""")
     public LauncherMode mode = LauncherMode.JAR;
 
     @Override
@@ -80,8 +80,8 @@ public class Config implements LauncherConfig {
 
     @Setting("custom_script")
     @Comment("""
-        Only if the mode is CUSTOM_SCRIPT, the arguments of the script to run.
-        Example for running a Minecraft server: ["@user_jvm_args.txt", "@libraries/net/minecraftforge/forge/1.19-41.0.17/unix_args.txt"]""")
+            Only if the mode is CUSTOM_SCRIPT, the arguments of the script to run.
+            Example for running a Minecraft server: ["@user_jvm_args.txt", "@libraries/net/minecraftforge/forge/1.19-41.0.17/unix_args.txt"]""")
     public List<String> customScript = List.of();
 
     @ConfigSerializable
@@ -145,18 +145,18 @@ public class Config implements LauncherConfig {
         @Required
         @Setting("file_pattern")
         @Comment("""
-        Regex patterns used to test a file name against in order to see if a file can be accessed through the Discord command.
-        An empty list will result in a pattern that will never match a name.
-        A '!' in front of a pattern will invert it.
-        '*' will make the pattern match any file.
-        Patterns are tested in the order they've been defined in: if one of them tests as true, the remaining will not be tested anymore""")
+                Regex patterns used to test a file name against in order to see if a file can be accessed through the Discord command.
+                An empty list will result in a pattern that will never match a name.
+                A '!' in front of a pattern will invert it.
+                '*' will make the pattern match any file.
+                Patterns are tested in the order they've been defined in: if one of them tests as true, the remaining will not be tested anymore""")
         public List<String> filePatterns = List.of();
 
         @Required
         @Setting("logging_webhook")
         @Comment("""
-        The URL of the webhook to use for discord logging if the launched process has logback on the classpath.
-        Can be left empty.""")
+                The URL of the webhook to use for discord logging if the launched process has logback on the classpath.
+                Can be left empty.""")
         public String loggingWebhook = "";
     }
 
@@ -172,11 +172,11 @@ public class Config implements LauncherConfig {
 
     public static <T> T load(final Path path, final Class<T> cfgType, final T defaultValue) throws ConfigurateException {
         final HoconConfigurationLoader loader = HoconConfigurationLoader.builder()
-            .emitComments(true)
-            .prettyPrinting(true)
-            .path(path)
-            .defaultOptions(opt -> opt.serializers(builder -> builder.register(TypeToken.get(LauncherMode.class), new ModeSerializer())))
-            .build();
+                .emitComments(true)
+                .prettyPrinting(true)
+                .path(path)
+                .defaultOptions(opt -> opt.serializers(builder -> builder.register(TypeToken.get(LauncherMode.class), new ModeSerializer())))
+                .build();
         final var configSerializer = Objects.requireNonNull(loader.defaultOptions().serializers().get(cfgType));
         final var type = io.leangen.geantyref.TypeToken.get(cfgType).getType();
 
@@ -198,7 +198,7 @@ public class Config implements LauncherConfig {
 
         { // Add new values to the config
             final var inMemoryNode = CommentedConfigurationNode
-                .root(loader.defaultOptions());
+                    .root(loader.defaultOptions());
             configSerializer.serialize(type, defaultValue, inMemoryNode);
             configRef.node().mergeFrom(inMemoryNode);
             configRef.save();

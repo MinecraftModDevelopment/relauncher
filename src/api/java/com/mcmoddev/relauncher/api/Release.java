@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,4 +20,5 @@
  */
 package com.mcmoddev.relauncher.api;
 
-public record Release(String name, String url) {}
+public record Release(String name, String url) {
+}

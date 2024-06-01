@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@ import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.DefaultJarUpdater;
 import com.mcmoddev.relauncher.api.BaseProcessManager;
-import com.mcmoddev.relauncher.api.JarUpdater;
 
 import java.util.function.Supplier;
 
@@ -44,17 +43,17 @@ public class ShutdownCommand extends RLCommand {
             return;
         }
         event.deferReply()
-            .setContent("Shutting down the process!")
-            .queue(hook -> {
-                DefaultJarUpdater.LOGGER.warn("Destroying process at the request of {} via Discord.", event.getUser().getAsTag());
-                process.process().onExit().whenComplete(($, $$) -> {
-                    if ($$ != null) {
-                        hook.editOriginal("Exception destroying process: " + $$.getLocalizedMessage()).queue();
-                    }
-                    hook.editOriginal("Successfully destroyed process!").queue();
+                .setContent("Shutting down the process!")
+                .queue(hook -> {
+                    DefaultJarUpdater.LOGGER.warn("Destroying process at the request of {} via Discord.", event.getUser().getName());
+                    process.process().onExit().whenComplete(($, $$) -> {
+                        if ($$ != null) {
+                            hook.editOriginal("Exception destroying process: " + $$.getLocalizedMessage()).queue();
+                        }
+                        hook.editOriginal("Successfully destroyed process!").queue();
+                    });
+                    process.process().destroy();
+                    updater.clearProcess();
                 });
-                process.process().destroy();
-                updater.clearProcess();
-            });
     }
 }

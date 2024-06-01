@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -63,47 +63,47 @@ public class FileCommand extends RLCommand {
             predicates = List.of(new Pred(s -> false, true));
         } else {
             predicates = config.filePatterns.stream()
-                .map(str -> {
-                    if (str.equals("*")) {
-                        return new Pred(s -> true, false);
-                    } else if (str.startsWith("!") && str.length() > 1) {
-                        final var regex = Pattern.compile(str.substring(1)).asPredicate();
-                        return new Pred(s -> !regex.test(s), true);
-                    } else {
-                        final var regex = Pattern.compile(str);
-                        return new Pred(regex.asPredicate(), false);
-                    }
-                })
-                .toList();
+                    .map(str -> {
+                        if (str.equals("*")) {
+                            return new Pred(s -> true, false);
+                        } else if (str.startsWith("!") && str.length() > 1) {
+                            final var regex = Pattern.compile(str.substring(1)).asPredicate();
+                            return new Pred(s -> !regex.test(s), true);
+                        } else {
+                            final var regex = Pattern.compile(str);
+                            return new Pred(regex.asPredicate(), false);
+                        }
+                    })
+                    .toList();
         }
 
         this.children = new SlashCommand[]{
-            new Cmd(this::onFileGet) {
+                new Cmd(this::onFileGet) {
 
-                @Override
-                public void init() {
-                    name = "get";
-                    help = "Gets a file.";
-                    options = List.of(
-                        new OptionData(OptionType.STRING, "path", "The path of the file to get.", true),
-                        new OptionData(OptionType.BOOLEAN, "zip", "If true, the provided directory at the path, will be zipped and sent.")
-                    );
+                    @Override
+                    public void init() {
+                        name = "get";
+                        help = "Gets a file.";
+                        options = List.of(
+                                new OptionData(OptionType.STRING, "path", "The path of the file to get.", true),
+                                new OptionData(OptionType.BOOLEAN, "zip", "If true, the provided directory at the path, will be zipped and sent.")
+                        );
+                    }
+                },
+
+                new Cmd(this::onFileUpload) {
+
+                    @Override
+                    public void init() {
+                        name = "upload";
+                        help = "Uploads a file.";
+                        options = List.of(
+                                new OptionData(OptionType.STRING, "path", "The path to upload the file to.", true),
+                                new OptionData(OptionType.ATTACHMENT, "file", "The file to upload. Mutually exclusive with 'url'"),
+                                new OptionData(OptionType.STRING, "url", "An url to download the file from, if it is too big. Mutually exclusive with 'file'")
+                        );
+                    }
                 }
-            },
-
-            new Cmd(this::onFileUpload) {
-
-                @Override
-                public void init() {
-                    name = "upload";
-                    help = "Uploads a file.";
-                    options = List.of(
-                        new OptionData(OptionType.STRING, "path", "The path to upload the file to.", true),
-                        new OptionData(OptionType.ATTACHMENT, "file", "The file to upload. Mutually exclusive with 'url'"),
-                        new OptionData(OptionType.STRING, "url", "An url to download the file from, if it is too big. Mutually exclusive with 'file'")
-                    );
-                }
-            }
         };
     }
 
@@ -128,40 +128,40 @@ public class FileCommand extends RLCommand {
             return;
         }
         event.deferReply()
-            .queue(hook -> {
-                if (attach != null) {
-                    attach.getProxy().downloadToFile(file.toFile())
-                        .whenComplete(($, e) -> {
-                            if (e == null) {
-                                hook.editOriginal("File downloaded successfully.").queue();
-                                Main.LOG.info("Downloaded file {} from Discord at the request of {}.", $, event.getUser().getAsTag());
-                            } else {
-                                hook.editOriginal("The downloaded encountered an error: " + e.getLocalizedMessage()).queue();
-                                Main.LOG.error("Error downloading file {} from discord at the request of {}: {}", file, event.getUser().getAsTag(), e);
+                .queue(hook -> {
+                    if (attach != null) {
+                        attach.getProxy().downloadToFile(file.toFile())
+                                .whenComplete(($, e) -> {
+                                    if (e == null) {
+                                        hook.editOriginal("File downloaded successfully.").queue();
+                                        Main.LOG.info("Downloaded file {} from Discord at the request of {}.", $, event.getUser().getName());
+                                    } else {
+                                        hook.editOriginal("The downloaded encountered an error: " + e.getLocalizedMessage()).queue();
+                                        Main.LOG.error("Error downloading file {} from discord at the request of {}: {}", file, event.getUser().getName(), e);
+                                    }
+                                });
+                    } else {
+                        try {
+                            Objects.requireNonNull(url);
+                            Files.deleteIfExists(file);
+                            final var parent = file.toAbsolutePath().getParent();
+                            if (parent != null) {
+                                Files.createDirectories(parent);
                             }
-                        });
-                } else {
-                    try {
-                        Objects.requireNonNull(url);
-                        Files.deleteIfExists(file);
-                        final var parent = file.toAbsolutePath().getParent();
-                        if (parent != null) {
-                            Files.createDirectories(parent);
-                        }
-                        try (final var readChannel = Channels.newChannel(new URL(url).openStream())) {
-                            Files.createFile(file);
-                            try (final var writeChannel = new FileOutputStream(file.toFile()).getChannel()) {
-                                writeChannel.transferFrom(readChannel, 0, Long.MAX_VALUE);
-                                hook.editOriginal("Successfully downloaded file.").queue();
-                                Main.LOG.info("Downloaded file {} from {} at the request of {} via Discord.", file, url, event.getUser().getAsTag());
+                            try (final var readChannel = Channels.newChannel(new URL(url).openStream())) {
+                                Files.createFile(file);
+                                try (final var writeChannel = new FileOutputStream(file.toFile()).getChannel()) {
+                                    writeChannel.transferFrom(readChannel, 0, Long.MAX_VALUE);
+                                    hook.editOriginal("Successfully downloaded file.").queue();
+                                    Main.LOG.info("Downloaded file {} from {} at the request of {} via Discord.", file, url, event.getUser().getName());
+                                }
                             }
+                        } catch (IOException e) {
+                            hook.editOriginal("The downloaded encountered an error: " + e.getLocalizedMessage()).queue();
+                            Main.LOG.info("Error downloading file {} from {} at the request of {} via Discord: {}", file, url, event.getUser().getName(), e);
                         }
-                    } catch (IOException e) {
-                        hook.editOriginal("The downloaded encountered an error: " + e.getLocalizedMessage()).queue();
-                        Main.LOG.info("Error downloading file {} from {} at the request of {} via Discord: {}", file, url, event.getUser().getAsTag(), e);
                     }
-                }
-            });
+                });
     }
 
     protected void onFileGet(final SlashCommandEvent event) {
@@ -173,16 +173,16 @@ public class FileCommand extends RLCommand {
         if (doZip) {
             final var dir = basePath.resolve(event.getOption("path", "", OptionMapping::getAsString));
             event.deferReply()
-                .flatMap(hook -> {
-                    try {
-                        final var data = filesZip(dir);
-                        return hook.editOriginalAttachments(AttachedFile.fromData(data, "dir.zip"));
-                    } catch (IOException e) {
-                        Main.LOG.error("Exception trying to zip directory '{}': ", dir, e);
-                        return hook.editOriginal("Exception trying to zip directory: " + e.getLocalizedMessage());
-                    }
-                })
-                .queue();
+                    .flatMap(hook -> {
+                        try {
+                            final var data = filesZip(dir);
+                            return hook.editOriginalAttachments(AttachedFile.fromData(data, "dir.zip"));
+                        } catch (IOException e) {
+                            Main.LOG.error("Exception trying to zip directory '{}': ", dir, e);
+                            return hook.editOriginal("Exception trying to zip directory: " + e.getLocalizedMessage());
+                        }
+                    })
+                    .queue();
             return;
         }
 
@@ -200,8 +200,8 @@ public class FileCommand extends RLCommand {
             return;
         }
         event.deferReply()
-            .flatMap(hook -> hook.editOriginalAttachments(FileUpload.fromData(file.toFile())))
-            .queue();
+                .flatMap(hook -> hook.editOriginalAttachments(FileUpload.fromData(file.toFile())))
+                .queue();
     }
 
     public boolean canAccessFile(final Path file) {

@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,10 +25,10 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.LayoutBase;
-import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.slf4j.helpers.MessageFormatter;
 
@@ -51,11 +51,11 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
      * Used for visual distinction of log messages within the Discord console channel.
      */
     public static final Map<Level, String> LEVEL_TO_EMOTE = Map.of(
-        Level.ERROR, ":red_square:",
-        Level.WARN, ":yellow_circle:",
-        Level.INFO, ":white_medium_small_square:",
-        Level.DEBUG, ":large_blue_diamond:",
-        Level.TRACE, ":small_orange_diamond:"
+            Level.ERROR, ":red_square:",
+            Level.WARN, ":yellow_circle:",
+            Level.INFO, ":white_medium_small_square:",
+            Level.DEBUG, ":large_blue_diamond:",
+            Level.TRACE, ":small_orange_diamond:"
     );
     private static final boolean JDA_EXISTS;
     /**
@@ -84,7 +84,7 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
         }
         if (obj instanceof Collection<?> col) {
             final Stream<Object> stream = col.stream()
-                .map(DiscordLogbackLayout::tryFormat);
+                    .map(DiscordLogbackLayout::tryFormat);
             if (obj instanceof Set) {
                 return stream.collect(Collectors.toSet());
             }
@@ -92,14 +92,14 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
 
         } else if (obj instanceof Map) {
             return ((Map<?, ?>) obj).entrySet().stream()
-                .map(entry -> new AbstractMap.SimpleImmutableEntry<>(
-                    tryFormat(entry.getKey()), tryFormat(entry.getValue())
-                ))
-                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
+                    .map(entry -> new AbstractMap.SimpleImmutableEntry<>(
+                            tryFormat(entry.getKey()), tryFormat(entry.getValue())
+                    ))
+                    .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
 
         } else if (obj instanceof final Map.Entry<?, ?> entry) {
             return new AbstractMap.SimpleImmutableEntry<>(tryFormat(entry.getKey()),
-                tryFormat(entry.getValue()));
+                    tryFormat(entry.getValue()));
 
         }
         return obj;
@@ -115,27 +115,27 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
     public String doLayout(final ILoggingEvent event) {
         final StringBuilder builder = new StringBuilder(2000);
         builder
-            .append(LEVEL_TO_EMOTE.getOrDefault(event.getLevel(), UNKNOWN_EMOTE));
+                .append(LEVEL_TO_EMOTE.getOrDefault(event.getLevel(), UNKNOWN_EMOTE));
         builder
-            .append(" [**")
-            .append(event.getLoggerName());
+                .append(" [**")
+                .append(event.getLoggerName());
         if (event.getMarker() != null) {
             builder
-                .append("**/**")
-                .append(event.getMarker().getName());
+                    .append("**/**")
+                    .append(event.getMarker().getName());
         }
         builder
-            .append("**] - ")
-            .append(getFormattedMessage(event))
-            .append(CoreConstants.LINE_SEPARATOR);
+                .append("**] - ")
+                .append(getFormattedMessage(event))
+                .append(CoreConstants.LINE_SEPARATOR);
 
         if (event.getThrowableProxy() != null) {
             final var t = event.getThrowableProxy();
             builder
-                .append(t.getClassName())
-                .append(": ")
-                .append(t.getMessage())
-                .append(CoreConstants.LINE_SEPARATOR);
+                    .append(t.getClassName())
+                    .append(": ")
+                    .append(t.getMessage())
+                    .append(CoreConstants.LINE_SEPARATOR);
 
             final StringBuilder stacktrace = buildStacktrace(t);
             String stacktraceCutoff = null;
@@ -146,17 +146,17 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
             }
 
             builder.append(CoreConstants.LINE_SEPARATOR)
-                .append("```ansi")
-                .append(CoreConstants.LINE_SEPARATOR)
-                .append(stacktrace)
-                .append("```");
+                    .append("```ansi")
+                    .append(CoreConstants.LINE_SEPARATOR)
+                    .append(stacktrace)
+                    .append("```");
 
             if (stacktraceCutoff != null) {
                 builder.append("*Too long to fully display. ")
-                    .append(stacktraceCutoff.length())
-                    .append(" characters or ")
-                    .append(stacktraceCutoff.lines().count())
-                    .append(" lines were truncated.*");
+                        .append(stacktraceCutoff.length())
+                        .append(" characters or ")
+                        .append(stacktraceCutoff.lines().count())
+                        .append(" lines were truncated.*");
             }
         }
         return builder.toString();
@@ -166,7 +166,7 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
         final var builder = new StringBuilder();
         for (int i = 0; i < exception.getStackTraceElementProxyArray().length; i++) {
             builder.append("\t ").append(exception.getStackTraceElementProxyArray()[i].toString())
-                .append(CoreConstants.LINE_SEPARATOR);
+                    .append(CoreConstants.LINE_SEPARATOR);
         }
         return builder;
     }
@@ -211,7 +211,7 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
             if (obj instanceof IMentionable) {
                 String name = null;
                 if (obj instanceof User) {
-                    name = ((User) obj).getAsTag();
+                    name = ((User) obj).getName();
                 } else if (obj instanceof Role) {
                     name = ((Role) obj).getName();
                 } else if (obj instanceof GuildChannel) {
@@ -221,10 +221,10 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
                 }
                 if (name != null) {
                     return String.format("%s (%s;`%s`)", ((IMentionable) obj).getAsMention(), name, ((IMentionable)
-                        obj).getIdLong());
+                            obj).getIdLong());
                 } else {
                     return String.format("%s (`%s`)", ((IMentionable) obj).getAsMention(),
-                        ((IMentionable) obj).getIdLong());
+                            ((IMentionable) obj).getIdLong());
                 }
             } else {
                 return null;

@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -68,13 +68,13 @@ public class SelfUpdate {
             final var restartCmd = resolveScript(getOS(), relaunchCmd);
             if (!os.contains("win")) { // Not windows, so we need to make the file executable
                 final var process = new ProcessBuilder("chmod", "+x", scriptPath.toString())
-                    .inheritIO()
-                    .start();
+                        .inheritIO()
+                        .start();
                 process.onExit().whenComplete(($, $$) -> {
                     try {
                         new ProcessBuilder(restartCmd)
-                            .inheritIO()
-                            .start();
+                                .inheritIO()
+                                .start();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -82,8 +82,8 @@ public class SelfUpdate {
                 });
             } else {
                 new ProcessBuilder(restartCmd)
-                    .inheritIO()
-                    .start();
+                        .inheritIO()
+                        .start();
                 System.exit(0);
             }
         }
@@ -91,7 +91,7 @@ public class SelfUpdate {
 
     public static String colour(String text) {
         return "\033[94;1m==== \033[36;1m" + text
-            + " \033[94;1m====\033[0m";
+                + " \033[94;1m====\033[0m";
     }
 
     public static String readAllLines(InputStream is) throws IOException {

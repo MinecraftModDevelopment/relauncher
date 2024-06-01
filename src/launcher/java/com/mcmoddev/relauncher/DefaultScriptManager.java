@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,13 +20,10 @@
  */
 package com.mcmoddev.relauncher;
 
-import static com.mcmoddev.relauncher.Main.findJavaBinary;
 import com.mcmoddev.relauncher.api.CustomScriptManager;
 import com.mcmoddev.relauncher.api.DiscordIntegration;
-import com.mcmoddev.relauncher.api.JarUpdater;
 import com.mcmoddev.relauncher.api.ProcessInfo;
 import com.mcmoddev.relauncher.api.Release;
-import com.mcmoddev.relauncher.api.UpdateChecker;
 import com.mcmoddev.relauncher.api.connector.ProcessConnector;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
@@ -34,9 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.rmi.RemoteException;
@@ -47,7 +42,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.jar.JarFile;
+
+import static com.mcmoddev.relauncher.Main.findJavaBinary;
 
 public class DefaultScriptManager implements CustomScriptManager {
     public static final Logger LOGGER = LoggerFactory.getLogger("ScriptManager");
@@ -107,8 +103,8 @@ public class DefaultScriptManager implements CustomScriptManager {
             LOGGER.info("Starting process...");
             setDiscordActivity(true);
             return new ProcessBuilder(getStartCommand())
-                .inheritIO()
-                .start();
+                    .inheritIO()
+                    .start();
         } catch (IOException e) {
             LOGGER.error("Starting process failed, used start command {}", getStartCommand(), e);
         }
@@ -185,11 +181,11 @@ public class DefaultScriptManager implements CustomScriptManager {
                 }
             };
             process.onExit().whenComplete(($, e) -> {
-               if (e != null) {
-                   DefaultScriptManager.LOGGER.error("Exception exiting process: ", e);
-               } else {
-                   LOGGER.warn("Process exited successfully.");
-               }
+                if (e != null) {
+                    DefaultScriptManager.LOGGER.error("Exception exiting process: ", e);
+                } else {
+                    LOGGER.warn("Process exited successfully.");
+                }
             });
 
             Main.SERVICE.schedule(() -> {
@@ -221,6 +217,7 @@ public class DefaultScriptManager implements CustomScriptManager {
         }
     }
 
-    record LoggingWebhook(String id, String token) {}
+    record LoggingWebhook(String id, String token) {
+    }
 
 }

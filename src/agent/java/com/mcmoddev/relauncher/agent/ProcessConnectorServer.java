@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,10 +21,10 @@
 package com.mcmoddev.relauncher.agent;
 
 import com.mcmoddev.relauncher.Properties;
+import com.mcmoddev.relauncher.api.StatusListener;
 import com.mcmoddev.relauncher.api.connector.MemoryUsage;
 import com.mcmoddev.relauncher.api.connector.ProcessConnector;
 import com.mcmoddev.relauncher.api.connector.ThreadInfo;
-import com.mcmoddev.relauncher.api.StatusListener;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -41,9 +41,9 @@ public class ProcessConnectorServer implements ProcessConnector {
     @Override
     public ThreadInfo[] getThreads() throws RemoteException {
         return Thread.getAllStackTraces()
-            .entrySet()
-            .stream()
-            .map(e -> ThreadInfo.fromThread(e.getKey(), e.getValue())).toArray(ThreadInfo[]::new);
+                .entrySet()
+                .stream()
+                .map(e -> ThreadInfo.fromThread(e.getKey(), e.getValue())).toArray(ThreadInfo[]::new);
     }
 
     @Override

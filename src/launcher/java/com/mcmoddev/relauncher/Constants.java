@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@ import com.google.gson.GsonBuilder;
 public class Constants {
 
     public static final Gson GSON = new GsonBuilder()
-        .setPrettyPrinting()
-        .create();
+            .setPrettyPrinting()
+            .create();
 
 }

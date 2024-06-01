@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -39,6 +39,7 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     public static final Logger LOG = LoggerFactory.getLogger("DiscordLogbackAppender");
 
     public static final String POST_URL = "https://discord.com/api/v9/webhooks/%s/%s";
+
     public static void setup(String webhookId, String webhookToken) throws ClassNotFoundException, ClassCastException {
         final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
 
@@ -63,13 +64,13 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     private Layout<ILoggingEvent> layout;
 
     private final HttpClient client = HttpClient.newBuilder()
-        .executor(Executors.newSingleThreadExecutor(r -> {
-            final Thread thread = new Thread(r);
-            thread.setName("DiscordLoggingAppender");
-            thread.setDaemon(true);
-            return thread;
-        }))
-        .build();
+            .executor(Executors.newSingleThreadExecutor(r -> {
+                final Thread thread = new Thread(r);
+                thread.setName("DiscordLoggingAppender");
+                thread.setDaemon(true);
+                return thread;
+            }))
+            .build();
 
     private URI uri;
 
@@ -93,15 +94,15 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
             final StringBuffer contentBuf = new StringBuffer();
             escape(getMessageContent(eventObject), contentBuf);
             final String body = '{' +
-                "\"content\":\"" + contentBuf + "\"," +
-                "\"allowed_mentions\":{\"parse\": []}" +
-                '}';
+                    "\"content\":\"" + contentBuf + "\"," +
+                    "\"allowed_mentions\":{\"parse\": []}" +
+                    '}';
             client.send(
-                HttpRequest.newBuilder(uri)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build(),
-                HttpResponse.BodyHandlers.ofString()
+                    HttpRequest.newBuilder(uri)
+                            .header("Content-Type", "application/json")
+                            .POST(HttpRequest.BodyPublishers.ofString(body))
+                            .build(),
+                    HttpResponse.BodyHandlers.ofString()
             ).body();
         } catch (IOException | InterruptedException e) {
             LOG.error("Error trying to send webhook message: ", e);
@@ -114,7 +115,7 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
 
     private static void escape(String s, StringBuffer sb) {
         final int len = s.length();
-        for (int i = 0; i < len; i++){
+        for (int i = 0; i < len; i++) {
             char ch = s.charAt(i);
             switch (ch) {
                 case '"':
@@ -143,7 +144,7 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
                     break;
                 default:
                     //Reference: http://www.unicode.org/versions/Unicode5.1.0/
-                    if (ch <= '\u001F' || ch >= '\u007F' && ch <= '\u009F' || ch >= '\u2000' && ch <= '\u20FF'){
+                    if (ch <= '\u001F' || ch >= '\u007F' && ch <= '\u009F' || ch >= '\u2000' && ch <= '\u20FF') {
                         String ss = Integer.toHexString(ch);
                         sb.append("\\u");
                         sb.append("0".repeat(4 - ss.length()));

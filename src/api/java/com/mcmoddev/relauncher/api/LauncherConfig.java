@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -65,7 +65,8 @@ public interface LauncherConfig {
         return LauncherMode.JAR;
     }
 
-    record CheckingRate(long amount, TimeUnit unit) {}
+    record CheckingRate(long amount, TimeUnit unit) {
+    }
 
     enum LauncherMode {
         /**

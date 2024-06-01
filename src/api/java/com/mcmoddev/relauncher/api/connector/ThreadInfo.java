@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,20 +22,22 @@ package com.mcmoddev.relauncher.api.connector;
 
 import java.io.Serializable;
 
-public record ThreadInfo(Group group, long id, String name, int priority, boolean daemon, Thread.State state, StackTraceElement[] stackElements) implements Serializable {
+public record ThreadInfo(Group group, long id, String name, int priority, boolean daemon, Thread.State state,
+                         StackTraceElement[] stackElements) implements Serializable {
 
     public static ThreadInfo fromThread(Thread thread, StackTraceElement[] stackElements) {
         return new ThreadInfo(
-            new Group(thread.getThreadGroup().getName()),
-            thread.getId(),
-            thread.getName(),
-            thread.getPriority(),
-            thread.isDaemon(),
-            thread.getState(),
-            stackElements
+                new Group(thread.getThreadGroup().getName()),
+                thread.getId(),
+                thread.getName(),
+                thread.getPriority(),
+                thread.isDaemon(),
+                thread.getState(),
+                stackElements
         );
     }
 
-    public record Group(String name) implements Serializable {}
+    public record Group(String name) implements Serializable {
+    }
 
 }

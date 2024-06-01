@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -56,17 +56,17 @@ public class DefaultLauncherFactory implements LauncherFactory<Config> {
     @Override
     public @NotNull JarUpdater createUpdater(final Config config) {
         final var checker = new GithubUpdateChecker(config.gitHub.owner, config.gitHub.repo, HttpClient.newBuilder()
-            .executor(Main.HTTP_CLIENT_EXECUTOR)
-            .build(),
-            Pattern.compile(config.checkingInfo.filePattern));
+                .executor(Main.HTTP_CLIENT_EXECUTOR)
+                .build(),
+                Pattern.compile(config.checkingInfo.filePattern));
         return new DefaultJarUpdater(Path.of(config.jarPath), checker, config.jvmArgs, config.discord.loggingWebhook);
     }
 
     @Override
     public CustomScriptManager createScriptManager(final Config config) {
         return new DefaultScriptManager(
-            config.customScript, config.jvmArgs,
-            config.discord.loggingWebhook
+                config.customScript, config.jvmArgs,
+                config.discord.loggingWebhook
         );
     }
 
@@ -83,19 +83,19 @@ public class DefaultLauncherFactory implements LauncherFactory<Config> {
         }
         final var url = "https://api.github.com/repos/%s/%s/releases/tags/%s".formatted(repo.owner(), repo.repo(), tagName);
         final var response = HttpClient.newBuilder()
-            .executor(Main.HTTP_CLIENT_EXECUTOR)
-            .build()
-            .send(HttpRequest.newBuilder(URI.create(url))
-                .GET()
-                .build(), HttpResponse.BodyHandlers.ofString());
+                .executor(Main.HTTP_CLIENT_EXECUTOR)
+                .build()
+                .send(HttpRequest.newBuilder(URI.create(url))
+                        .GET()
+                        .build(), HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() == 404) {
             return null;
         }
         final var release = Constants.GSON.fromJson(response.body(), GithubRelease.class);
         return release.assets.stream()
-            .filter(a -> SELF_UPDATE_PATTERN.matcher(a.name).find())
-            .map(a -> a.browserDownloadUrl)
-            .findFirst()
-            .orElse(null);
+                .filter(a -> SELF_UPDATE_PATTERN.matcher(a.name).find())
+                .map(a -> a.browserDownloadUrl)
+                .findFirst()
+                .orElse(null);
     }
 }

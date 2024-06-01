@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,6 @@ import com.mcmoddev.relauncher.Config;
 import com.mcmoddev.relauncher.Constants;
 import com.mcmoddev.relauncher.Main;
 import com.mcmoddev.relauncher.api.BaseProcessManager;
-import com.mcmoddev.relauncher.api.JarUpdater;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -46,8 +45,8 @@ public class ProfilingCommand extends RLCommand {
         name = "profiling";
         help = "Profiling related commands.";
         options = List.of(
-            new OptionData(OptionType.STRING, "type", "The type of the profiler to run.")
-                .addChoice("Process", "process")
+                new OptionData(OptionType.STRING, "type", "The type of the profiler to run.")
+                        .addChoice("Process", "process")
         );
     }
 
@@ -61,27 +60,27 @@ public class ProfilingCommand extends RLCommand {
             return;
         }
         event.deferReply()
-            .flatMap(hook -> {
-                try {
-                    if (!Files.exists(DIRECTORY_PATH)) {
-                        Files.createDirectories(DIRECTORY_PATH);
-                    }
-                    return switch (event.getOption("type", "", OptionMapping::getAsString)) {
-                        case "process" -> {
-                            final var result = connector.getProcessInfoProfiling();
-                            final var file = DIRECTORY_PATH.resolve(Instant.now().getEpochSecond() + ".json");
-                            try (final var writer = Files.newBufferedWriter(file, StandardOpenOption.CREATE)) {
-                                Constants.GSON.toJson(result, writer);
-                                yield hook.editOriginalAttachments(AttachedFile.fromData(file.toFile(), "profiling.json"));
-                            }
+                .flatMap(hook -> {
+                    try {
+                        if (!Files.exists(DIRECTORY_PATH)) {
+                            Files.createDirectories(DIRECTORY_PATH);
                         }
-                        default -> hook.editOriginal("Invalid type provided!");
-                    };
-                } catch (Exception e) {
-                    Main.LOG.error("Exception getting profiling results: ", e);
-                    return hook.editOriginal("There was an exception getting profiling results: " + e.getLocalizedMessage());
-                }
-            })
-            .queue();
+                        return switch (event.getOption("type", "", OptionMapping::getAsString)) {
+                            case "process" -> {
+                                final var result = connector.getProcessInfoProfiling();
+                                final var file = DIRECTORY_PATH.resolve(Instant.now().getEpochSecond() + ".json");
+                                try (final var writer = Files.newBufferedWriter(file, StandardOpenOption.CREATE)) {
+                                    Constants.GSON.toJson(result, writer);
+                                    yield hook.editOriginalAttachments(AttachedFile.fromData(file.toFile(), "profiling.json"));
+                                }
+                            }
+                            default -> hook.editOriginal("Invalid type provided!");
+                        };
+                    } catch (Exception e) {
+                        Main.LOG.error("Exception getting profiling results: ", e);
+                        return hook.editOriginal("There was an exception getting profiling results: " + e.getLocalizedMessage());
+                    }
+                })
+                .queue();
     }
 }

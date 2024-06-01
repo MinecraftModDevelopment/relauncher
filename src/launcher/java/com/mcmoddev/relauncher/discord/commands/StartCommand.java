@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -49,12 +49,12 @@ public class StartCommand extends RLCommand {
             return;
         }
         event.deferReply()
-            .setContent("Starting the process!")
-            .flatMap(hook -> {
-                DefaultJarUpdater.LOGGER.warn("Starting process at the request of {} via Discord.", event.getUser().getAsTag());
-                updater.startProcess();
-                return hook.editOriginal("Successfully started the process.");
-            })
-            .queue();
+                .setContent("Starting the process!")
+                .flatMap(hook -> {
+                    DefaultJarUpdater.LOGGER.warn("Starting process at the request of {} via Discord.", event.getUser().getName());
+                    updater.startProcess();
+                    return hook.editOriginal("Successfully started the process.");
+                })
+                .queue();
     }
 }

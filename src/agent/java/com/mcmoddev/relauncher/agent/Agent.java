@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,8 +21,8 @@
 package com.mcmoddev.relauncher.agent;
 
 import com.mcmoddev.relauncher.agent.logback.DiscordLogbackAppender;
-import com.mcmoddev.relauncher.api.connector.ProcessConnector;
 import com.mcmoddev.relauncher.api.StatusListener;
+import com.mcmoddev.relauncher.api.connector.ProcessConnector;
 
 import java.lang.instrument.Instrumentation;
 import java.rmi.NotBoundException;
@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 
 public final class Agent {
     public static final String VERSION;
+
     static {
         var version = Agent.class.getPackage().getImplementationVersion();
         if (version == null) {
@@ -93,7 +94,7 @@ public final class Agent {
 
     public static String colour(String text) {
         return "\033[94;1m==== \033[36;1m" + text
-            + " \033[94;1m====\033[0m";
+                + " \033[94;1m====\033[0m";
     }
 
     public static void executeOnListeners(Consumer<? super StatusListener> consumer) {

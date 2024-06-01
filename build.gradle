@@ -17,7 +17,7 @@ plugins {
 group = "com.mcmoddev"
 archivesBaseName = "ReLauncher"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 sourceSets {
     api {}

@@ -1,6 +1,6 @@
 /*
  * ReLauncher - https://github.com/MinecraftModDevelopment/ReLauncher
- * Copyright (C) 2016-2023 <MMD - MinecraftModDevelopment>
+ * Copyright (C) 2016-2024 <MMD - MinecraftModDevelopment>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -78,8 +78,8 @@ public final class Main {
     public static final ThreadGroup THREAD_GROUP = new ThreadGroup("ReLauncher");
 
     public static final WrappingFactory FACTORY = new WrappingFactory<>(ServiceLoader.load(LauncherFactory.class)
-        .findFirst()
-        .orElse(new DefaultLauncherFactory()));
+            .findFirst()
+            .orElse(new DefaultLauncherFactory()));
     public static final String RMI_NAME = ProcessConnector.BASE_NAME + "#" + (int) ProcessHandle.current().pid();
     public static final Logger LOG = LoggerFactory.getLogger("ReLauncher");
     public static final Path RELAUNCHER_DIR = Path.of(".relauncher");
@@ -172,15 +172,15 @@ public final class Main {
         }
 
         final var jarPath = Main.class
-            .getProtectionDomain()
-            .getCodeSource()
-            .getLocation()
-            .toURI()
-            .getPath()
-            .substring(1); // remove the starting '/'
+                .getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toURI()
+                .getPath()
+                .substring(1); // remove the starting '/'
 
         var command = getCommandLine(ProcessHandle.current())
-            .orElseThrow(() -> new Exception("Could not determine the command to use for restarting!"));
+                .orElseThrow(() -> new Exception("Could not determine the command to use for restarting!"));
 
         final var url = FACTORY.getSelfUpdateUrl(tagName);
         if (url == null) {
@@ -189,14 +189,14 @@ public final class Main {
 
         final var uri = URI.create(url);
         final var request = HttpRequest.newBuilder(uri)
-            .GET()
-            .header("accept", "application/vnd.github.v3+json")
-            .build();
+                .GET()
+                .header("accept", "application/vnd.github.v3+json")
+                .build();
 
         final var res = HttpClient.newBuilder()
-            .executor(HTTP_CLIENT_EXECUTOR)
-            .build()
-            .send(request, HttpResponse.BodyHandlers.ofString());
+                .executor(HTTP_CLIENT_EXECUTOR)
+                .build()
+                .send(request, HttpResponse.BodyHandlers.ofString());
         if (res.statusCode() == 404) {
             throw new Exception("Unknown tag: " + tagName);
         }
@@ -214,16 +214,16 @@ public final class Main {
         }
 
         new ProcessBuilder()
-            .command(
-                findJavaBinary(), "-jar",
-                String.valueOf(ProcessHandle.current().pid()),
-                selfUpdateJarPath.toString(),
-                jarPath,
-                command,
-                url
-            )
-            .inheritIO()
-            .start();
+                .command(
+                        findJavaBinary(), "-jar",
+                        String.valueOf(ProcessHandle.current().pid()),
+                        selfUpdateJarPath.toString(),
+                        jarPath,
+                        command,
+                        url
+                )
+                .inheritIO()
+                .start();
 
         System.exit(0);
     }
@@ -250,9 +250,9 @@ public final class Main {
         final var desiredProcessId = processHandle.pid();
         try {
             final var process = new ProcessBuilder("wmic", "process", "where", "ProcessID=" + desiredProcessId, "get",
-                "commandline", "/format:list").
-                redirectErrorStream(true).
-                start();
+                    "commandline", "/format:list").
+                    redirectErrorStream(true).
+                    start();
             try (final var inputStreamReader = new InputStreamReader(process.getInputStream());
                  final var reader = new BufferedReader(inputStreamReader)) {
                 while (true) {
