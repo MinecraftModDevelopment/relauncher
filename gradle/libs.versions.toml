@@ -3,7 +3,7 @@ shadow = { id = "com.github.johnrengelman.shadow", version = "7.1.2" }
 licenser = { id = "org.cadixdev.licenser", version = "0.6.1" }
 
 [versions]
-jda = "5.0.0-beta.4"
+jda = "5.0.0-beta.24"
 chewtils = "2.0-SNAPSHOT"
 gson = "2.10.1"
 logback = "1.2.11"
