@@ -86,7 +86,7 @@ dependencies {
     shade libs.gson
     shade libs.configurate.hocon
 
-    final slf4j = "org.slf4j:slf4j-api:1.7.36"
+    final slf4j = "org.slf4j:slf4j-api:2.0.13"
 
     launcherCompileOnly slf4j
     runtimeOnly slf4j
