@@ -3,8 +3,8 @@ shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 licenser = { id = "org.cadixdev.licenser", version = "0.6.1" }
 
 [versions]
-jda = "5.0.0-beta.24"
-chewtils = "2.0-SNAPSHOT"
+jda = "6.3.2"
+chewtils = "39a83bd8"
 gson = "2.11.0"
 logback = "1.5.6"
 annotations = "24.1.0"
@@ -13,7 +13,7 @@ jsr305 = "3.0.2"
 
 [libraries]
 jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
-chewtils = { module = "pw.chew:jda-chewtils", version.ref = "chewtils" }
+chewtils = { module = "com.github.Chew:JDA-Chewtils", version.ref = "chewtils" }
 chewtils-command = { module = "pw.chew:jda-chewtils-command", version.ref = "chewtils" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

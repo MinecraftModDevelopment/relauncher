@@ -26,10 +26,11 @@ import com.mcmoddev.relauncher.Main;
 import com.mcmoddev.relauncher.api.BaseProcessManager;
 import com.mcmoddev.relauncher.api.connector.ThreadInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.jetbrains.annotations.NotNull;
@@ -94,7 +95,7 @@ public class StatusCommand extends RLCommand implements EventListener {
 
             event.deferReply()
                     .addEmbeds(embed.build())
-                    .addActionRow(Button.primary(BUTTON_NAME, "\uD83D\uDCF7 Thread Dump"))
+                    .addComponents(ActionRow.of(Button.primary(BUTTON_NAME, "\uD83D\uDCF7 Thread Dump")))
                     .queue();
         }
     }
@@ -102,7 +103,7 @@ public class StatusCommand extends RLCommand implements EventListener {
     @Override
     public void onEvent(@NotNull final GenericEvent e$) {
         if (!(e$ instanceof ButtonInteractionEvent event)) return;
-        if (event.getButton().getId() == null || !event.getButton().getId().equals(BUTTON_NAME) || !event.isFromGuild()) {
+        if (event.getButton().getCustomId() == null || !event.getButton().getCustomId().equals(BUTTON_NAME) || !event.isFromGuild()) {
             event.deferEdit().queue();
             return;
         }
