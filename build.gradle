@@ -11,7 +11,6 @@ plugins {
     id 'eclipse'
     id 'idea'
     alias(libs.plugins.shadow)
-    alias(libs.plugins.licenser)
 }
 
 group = "com.mcmoddev"
@@ -57,19 +56,6 @@ repositories {
         url 'https://m2.chew.pro/snapshots'
     }
     maven { url 'https://jitpack.io' }
-}
-
-license {
-    ignoreFailures = true // Temporarily downgrade license header violations to warnings, because in-flux development
-    header = file('LicenseHeader.md')
-    include '**/*.java'
-    include '**/*.kt'
-    exclude '**/package-info.java'
-    exclude '**/module-info.java'
-    newLine = false
-    properties {
-        year = OffsetDateTime.now(ZoneOffset.UTC).withNano(0).getYear()
-    }
 }
 
 dependencies {
@@ -213,7 +199,6 @@ tasks.named(JavaPlugin.JAR_TASK_NAME, Jar).configure {
 
     manifest.attributes(makeManifestAttributes('Main-Class', application.getMainClass().get()))
     description 'Builds the project without its dependencies.'
-    dependsOn tasks.named('updateLicenses')
 }
 
 tasks.register('apiJar', Jar).configure {
@@ -221,7 +206,6 @@ tasks.register('apiJar', Jar).configure {
     manifest.attributes(makeManifestAttributes("", ""))
     archiveClassifier.set 'api'
     description 'Builds the api jar.'
-    dependsOn tasks.named('updateLicenses')
     group 'build'
 }
 
